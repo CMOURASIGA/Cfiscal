@@ -25,8 +25,8 @@
     const match=/^(202[67])-(0[1-9]|1[0-2])$/.exec(month||"");
     if(!match)return null;
     const y=Number(match[1]),m=Number(match[2]);
-    const end=new Date(Date.UTC(y,m-3,1));
-    const start=new Date(Date.UTC(y,m-14,1));
+    const end=new Date(Date.UTC(y,y>=2027?m-3:m-2,1));
+    const start=new Date(Date.UTC(y,y>=2027?m-14:m-13,1));
     const format=d=>new Intl.DateTimeFormat("pt-BR",{month:"long",year:"numeric",timeZone:"UTC"}).format(d);
     return {start:format(start),end:format(end)};
   }
