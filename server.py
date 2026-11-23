@@ -68,6 +68,64 @@ def evaluate(kind, result, data):
     return (f"{state} · Diferença (XML menos motor): CBS R$ {(values[0]-values[1])/100:.2f}; "
             f"IBS R$ {(values[2]-values[3])/100:.2f}.")
 
+
+def dashboard_for(notes):
+    """Indicadores descritivos de XMLs; não atestam conformidade fiscal integral."""
+    from decimal import Decimal, InvalidOperation
+    counts = {"Valores coincidentes": 0, "Divergência": 0, "Dados insuficientes": 0}
+    gross = Decimal("0")
+    gross_known = 0
+    declared_cbs = Decimal("0")
+    declared_ibs = Decimal("0")
+    cbs_known = ibs_known = 0
+    pending_review = 0
+    monthly = {}
+    for note in notes:
+        status = note.get("status")
+        if status in counts:
+            counts[status] += 1
+        date = str(note.get("date",""))[:7]
+        if re.fullmatch(r"\\d{4}-\\d{2}",date):
+            month = monthly.setdefault(date,{"competencia":date,"notas":0,"divergencias":0,"dados_insuficientes":0})
+            month["notas"] += 1
+            month["divergencias"] += int(status=="Divergência")
+            month["dados_insuficientes"] += int(status=="Dados insuficientes")
+        for field in ("gross","cbs","ibs"):
+            try:
+                val = Decimal(str(note.get(field,"")))
+                if not val.is_finite() or val < 0:
+                    continue
+                if field == "gross":
+                    gross += val
+                    gross_known += 1
+                elif field == "cbs":
+                    declared_cbs += val
+                    cbs_known += 1
+                else:
+                    declared_ibs += val
+                    ibs_known += 1
+            except (InvalidOperation,TypeError):
+                pass
+        revisions=[e for e in note.get("events",[]) if e["kind"]=="Revisão"]
+        if not revisions or revisions[-1]["data"].get("situacao")!="Concluída":
+            pending_review += 1
+    return {
+        "notas":len(notes),
+        "coincidentes_aritmeticos":counts["Valores coincidentes"],
+        "divergencias":counts["Divergência"],
+        "dados_insuficientes":counts["Dados insuficientes"],
+        "revisoes_pendentes":pending_review,
+        "valor_servicos_informado":str(gross),
+        "valor_servicos_com_valor":gross_known,
+        "cbs_declarada":str(declared_cbs) if cbs_known else None,
+        "ibs_declarado":str(declared_ibs) if ibs_known else None,
+        "cbs_documentos_com_valor":cbs_known,
+        "ibs_documentos_com_valor":ibs_known,
+        "tributacao_calculada":None,
+        "conformidade_fiscal_integral":"Não verificada",
+        "evolucao":sorted(monthly.values(),key=lambda x:x["competencia"]),
+    }
+
 class Handler(SimpleHTTPRequestHandler):
     def log_message(self, *args):
         pass
@@ -98,10 +156,24 @@ class Handler(SimpleHTTPRequestHandler):
             with closing(sqlite3.connect(DB)) as db:
                 clients = [dict(id=i,name=n,cnpj=c,active=bool(a)) for i,n,c,a in db.execute("SELECT id,name,cnpj,active FROM clients ORDER BY name")]
             return self.send_data(clients)
-        if path == "/api/notas":
-            client_id = parse_qs(urlsplit(self.path).query).get("cliente", [""])[0]
+        if path in ("/api/notas","/api/dashboard"):
+            query = parse_qs(urlsplit(self.path).query)
+            client_id = query.get("cliente", [""])[0]
+            competencia = query.get("competencia", [""])[0]
+            if competencia and not re.fullmatch(r"\\d{4}-\\d{2}",competencia):
+                return self.send_data({"error":"Competência inválida."},422)
             with closing(sqlite3.connect(DB)) as db:
-                if client_id == "pendentes":
+                if path == "/api/dashboard" and query.get("perfil",[""])[0] == "contador":
+                    company_rows = db.execute("SELECT id,name,cnpj FROM clients WHERE active=1 ORDER BY name").fetchall()
+                    clients_dashboard = []
+                    for cid,name,cnpj in company_rows:
+                        records = db.execute("SELECT n.id,n.data,n.created FROM notes n JOIN note_clients nc ON nc.note_id=n.id WHERE nc.client_id=? ORDER BY n.rowid DESC",(cid,)).fetchall()
+                        items = [dict(json.loads(data),events=[]) for _,data,_ in records]
+                        if competencia:
+                            items=[n for n in items if n.get("date","").startswith(competencia)]
+                        clients_dashboard.append(dict(id=cid,nome=name,cnpj=cnpj,**dashboard_for(items)))
+                    return self.send_data({"perfil":"contador","competencia":competencia,"clientes":clients_dashboard})
+                if client_id == "pendentes" and path == "/api/notas":
                     records = db.execute("SELECT n.id,n.data,n.created FROM notes n LEFT JOIN note_clients nc ON nc.note_id=n.id WHERE nc.note_id IS NULL ORDER BY n.rowid DESC").fetchall()
                 elif client_id:
                     records = db.execute("SELECT n.id,n.data,n.created FROM notes n JOIN note_clients nc ON nc.note_id=n.id WHERE nc.client_id=? ORDER BY n.rowid DESC",(client_id,)).fetchall()
@@ -111,7 +183,12 @@ class Handler(SimpleHTTPRequestHandler):
                 for i,kind,data,t in db.execute("SELECT note,kind,data,created FROM events ORDER BY rowid"):
                     if i in notes:
                         notes[i]["events"].append(dict(kind=kind,data=json.loads(data),date=t))
-            return self.send_data(list(notes.values()))
+            items=list(notes.values())
+            if competencia:
+                items=[n for n in items if n.get("date","").startswith(competencia)]
+            if path == "/api/dashboard":
+                return self.send_data({"perfil":"empresario","cliente":client_id or None,"competencia":competencia,**dashboard_for(items)})
+            return self.send_data(items)
         if path.startswith("/api/"):
             return self.send_data({"error":"Recurso desconhecido."},404)
         super().do_GET()
