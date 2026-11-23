@@ -61,6 +61,19 @@ class Conferencia(unittest.TestCase):
         self.assertFalse(self.call("/api/importar",{"xml":self.xml})["importada"])
         with self.assertRaises(error.HTTPError):
             self.call("/api/importar",{"xml":self.xml.replace("1.48","2.48")})
+    def test_importacao_separada_e_ajuda(self):
+        for f in self.call("/api/exemplos"):
+            self.call("/api/importar",{"xml":f["xml"]})
+        for f in (server.ROOT/"importar").glob("*.xml"):
+            body={"xml":f.read_text(encoding="utf8")}
+            first=self.call("/api/importar",body)
+            repeat=self.call("/api/importar",body)
+            self.assertTrue(first["importada"])
+            self.assertFalse(repeat["importada"])
+            self.assertEqual(first["id"],repeat["id"])
+            self.assertEqual(first["numero"],f.stem)
+        self.assertEqual(len(self.call("/api/notas")),6)
+        self.assertIn("Recebi um XML da Consult",self.call("/ajuda.html").decode())
     def test_invalid(self):
         for xml in ("<NFSe>","<NFe/>","<!DOCTYPE x><x/>"):
             with self.assertRaises(ValueError):parse(xml)

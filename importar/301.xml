@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Amostra fictícia reduzida para homologação, sem assinatura ou validade fiscal. -->
+<NFSe xmlns="http://www.sped.fazenda.gov.br/nfse" versao="1.01">
+  <infNFSe Id="IMPORTACAO301">
+    <nNFSe>301</nNFSe>
+    <emit><CNPJ>00000000000353</CNPJ><xNome>Consultoria Modelo Fictícia</xNome></emit>
+    <IBSCBS><valores><vBC>1200.00</vBC></valores><totCIBS>
+      <gIBS><vIBSTot>0.48</vIBSTot><gIBSUFTot><vIBSUF>0.24</vIBSUF></gIBSUFTot><gIBSMunTot><vIBSMun>0.24</vIBSMun></gIBSMunTot></gIBS>
+      <gCBS><vCBS>42.24</vCBS></gCBS>
+    </totCIBS></IBSCBS>
+    <DPS versao="1.01"><infDPS><dCompet>2027-03-10</dCompet><prest><regTrib><opSimpNac>1</opSimpNac></regTrib></prest>
+      <serv><cServ><xDescServ>Serviço de demonstração</xDescServ><cNBS>122011200</cNBS></cServ></serv>
+      <valores><vServPrest><vServ>1200.00</vServ></vServPrest></valores>
+      <IBSCBS><valores><trib><gIBSCBS><CST>200</CST><cClassTrib>200028</cClassTrib></gIBSCBS></trib></valores></IBSCBS>
+    </infDPS></DPS>
+  </infNFSe>
+</NFSe>

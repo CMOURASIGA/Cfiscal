@@ -120,7 +120,7 @@ class Handler(SimpleHTTPRequestHandler):
                         old = db.execute("SELECT xml FROM notes WHERE id=?", (data["id"],)).fetchone()[0]
                         if old != xml:
                             raise ValueError("Já existe uma nota com este identificador e conteúdo diferente.")
-                    result = {"importada": bool(cur.rowcount)}
+                    result = {"importada": bool(cur.rowcount), "id": data["id"], "numero": data["number"]}
                 else:
                     row = db.execute("SELECT xml,data FROM notes WHERE id=?", (body["id"],)).fetchone()
                     if not row:

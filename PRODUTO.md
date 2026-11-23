@@ -6,7 +6,7 @@ O analista fiscal recebe XMLs, seleciona uma empresa e competência e prioriza d
 
 ## Padrões Consult Services
 
-O catálogo é uma vitrine de padrões e inclui arquivos reutilizáveis específicos. O CFiscal incorpora os arquivos consult-tabs.css e consult-tabs.js do catálogo na revisão f443f5ab3c2018565678844fe1e6266b1a6be4cd. Eles controlam as abas do detalhe, foco e navegação pelo teclado. Sidebar, indicadores, estados vazios, feedback de importação, drawer com Escape e labels visíveis seguem referências funcionais do catálogo. O ícone CFiscal é uma proposta local sujeita à aprovação visual.
+O catálogo é uma vitrine de padrões e inclui arquivos reutilizáveis específicos. O CFiscal incorpora os arquivos consult-tabs.css e consult-tabs.js do catálogo na revisão f443f5ab3c2018565678844fe1e6266b1a6be4cd. Eles controlam as abas do detalhe, foco e navegação pelo teclado. Sidebar, indicadores, estados vazios, feedback de importação, drawer com Escape e labels visíveis seguem referências funcionais do catálogo. O ícone proposto para homologação usa escudo, documento fiscal e conferência na família descrita em RT-009. A paleta segue RT-001: azul #003B73 e ciano #00AEEF. O cadastro definitivo do ícone no catálogo compartilhado depende do aceite visual.
 
 [Catálogo de componentes](https://github.com/CMOURASIGA/componentes_consult_services/tree/f443f5ab3c2018565678844fe1e6266b1a6be4cd)
 

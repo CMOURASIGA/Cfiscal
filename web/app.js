@@ -36,7 +36,7 @@ function render() {
   const visible = filtered();
   $("metrics").replaceChildren(...["Notas no filtro",...states].map((label,i)=>{
     const box = el("div",undefined,"metric");
-    box.style.setProperty("--tone",["#446bad","#52856c","#ce9948","#8798b5"][i]);
+    box.style.setProperty("--tone",["#003B73","#52856c","#ce9948","#8798b5"][i]);
     box.append(el("span",label),el("strong",i?visible.filter(n=>n.status===label).length:visible.length));
     return box;
   }));
@@ -60,20 +60,25 @@ async function refresh() {
 async function batch(files) {
   $("import").disabled=$("demo").disabled=true;
   $("batch").replaceChildren();$("receipts").hidden=false;$("receipts").open=true;
-  let count=0;
+  let added=0, repeated=0, rejected=0;
   try {
     for(const file of files) {
-      let result;
+      const row=el("li");
       try {
         if(file.size>5*1024*1024) throw new Error("Máximo de 5 MiB por XML.");
         const xml=file.xml ?? await file.text();
         const r=await api("importar",{xml});
-        result=r.importada?"Importada":"Duplicada, já importada";
-        if(r.importada) count++;
-      } catch(e) {result=e.message;}
-      $("batch").append(el("li",file.name+" · "+result));
+        if(r.importada) added++; else repeated++;
+        row.append(el("span",file.name+" · Nota "+r.numero+" · "+(r.importada?"Importada":"Já estava na fila. A revisão anterior foi preservada.")));
+        const open=el("button","Abrir nota "+r.numero);
+        open.onclick=()=>{const item=notes.find(n=>n.id===r.id);if(item)detail(item);};
+        row.append(open);
+      } catch(e) {rejected++;row.append(el("span",file.name+" · Recusado: "+e.message));}
+      $("batch").append(row);
     }
-    await refresh();message(count+" nota(s) importada(s). Confira o resultado do lote.");
+    await refresh();
+    $("batchTitle").textContent="Resultado do lote · Novas: "+added+" · Já na fila: "+repeated+" · Recusadas: "+rejected;
+    $("receipts").scrollIntoView({block:"nearest"});
   } finally { $("import").disabled=$("demo").disabled=false; }
 }
 function detail(n) {
