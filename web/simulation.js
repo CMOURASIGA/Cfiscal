@@ -13,6 +13,36 @@
     ["Lucro Real","Exige apurar resultado contábil e fiscal, ajustes, despesas e créditos admissíveis."]
   ];
   let loadedClient=null,dirty=false,step="dados",saving=false;
+  function isConsultSelected(){
+    const select=$("clientSelect");
+    return /CONSULT SERVICES/i.test(select.options[select.selectedIndex]?.textContent||"");
+  }
+  function updateExampleAvailability(){
+    const button=$("simulationExample");
+    button.disabled=!selectedClient()||!isConsultSelected();
+  }
+  function referenceWindow(month){
+    const match=/^(202[67])-(0[1-9]|1[0-2])$/.exec(month||"");
+    if(!match)return null;
+    const y=Number(match[1]),m=Number(match[2]);
+    const end=new Date(Date.UTC(y,m-3,1));
+    const start=new Date(Date.UTC(y,m-14,1));
+    const format=d=>new Intl.DateTimeFormat("pt-BR",{month:"long",year:"numeric",timeZone:"UTC"}).format(d);
+    return {start:format(start),end:format(end)};
+  }
+  function warnings(){
+    const d=values(),messages=[],revenue=number(d.receita_12m),payroll=number(d.folha_12m);
+    if(revenue===null&&payroll!==null&&payroll>=10000)
+      messages.push("A folha elegível tem valor elevado, mas o RBT12 está vazio. Confira se o faturamento foi lançado no campo errado.");
+    if(payroll!==null&&revenue!==null&&revenue>0&&payroll>=revenue)
+      messages.push("A folha elegível é igual ou superior à receita informada. Confira ambas antes de salvar.");
+    if(d.estrutura_equipe==="so_socios"&&number(d.prolabore_mensal)===0&&payroll!==null&&payroll>0)
+      messages.push("Sem empregados e com pró-labore zero, a folha positiva precisa de origem e natureza confirmadas com a contabilidade.");
+    const warning=$("simulationWarnings");
+    warning.hidden=messages.length===0;
+    warning.replaceChildren(...messages.map(message=>make("p",message)));
+    return messages;
+  }
   function selectedClient(){return $("clientSelect").value;}
   function make(tag,text,className){
     const el=document.createElement(tag);
@@ -57,9 +87,9 @@
   function renderDiagnosis(){
     const d=values(),box=$("simulationDiagnosis");
     const list=[];
-    const pr=progress(d),fr=factor(d);
+    const pr=progress(d),fr=factor(d),windowPeriod=referenceWindow(d.competencia_referencia);
     list.push(row("Receita de referência",d.receita_12m!==""?"Informado":"Pendente",
-      d.receita_12m!==""?"RBT12 informado: "+money(Number(d.receita_12m))+". Confirmar período e valor no PGDAS-D.":"Informe a receita bruta dos 12 meses anteriores à competência de referência."));
+      d.receita_12m!==""?"RBT12 informado: "+money(Number(d.receita_12m))+". "+(windowPeriod?"Período de referência de 2027: "+windowPeriod.start+" a "+windowPeriod.end+". ":"")+"Confirmar valor no PGDAS-D.":"Informe a receita do período correto. "+(windowPeriod?"De "+windowPeriod.start+" a "+windowPeriod.end+". ":"")));
     list.push(row("Faturamento 2027",d.receita_prevista_2027!==""?"Informado":"Pendente",
       d.receita_prevista_2027!==""?"Projeção anual: "+money(Number(d.receita_prevista_2027))+". Isto é uma hipótese, não receita realizada.":"Informe uma projeção anual para 2027."));
     list.push(row("Equipe e pró-labore",(d.estrutura_equipe!=="nao_informado"&&d.prolabore_mensal!=="")?"Informado":"Pendente",
@@ -76,9 +106,9 @@
     box.prepend(summary);
   }
   function renderResults(){
-    const d=values(),fr=factor(d),box=$("simulationResults");
+    const d=values(),fr=factor(d),box=$("simulationResults"),windowPeriod=referenceWindow(d.competencia_referencia);
     const resultList=[];
-    if(d.receita_12m!==""&&Number.isFinite(Number(d.receita_12m)))resultList.push(row("RBT12 declarado","Calculado",money(Number(d.receita_12m))+" (valor informado, não homologado no PGDAS-D)."));
+    if(d.receita_12m!==""&&Number.isFinite(Number(d.receita_12m)))resultList.push(row("RBT12 declarado","Calculado",money(Number(d.receita_12m))+" (valor informado, não homologado no PGDAS-D; "+(windowPeriod?windowPeriod.start+" a "+windowPeriod.end:"período não confirmado")+")."));
     if(d.receita_prevista_2027!==""&&Number.isFinite(Number(d.receita_prevista_2027)))resultList.push(row("Projeção de faturamento para 2027","Calculado",money(Number(d.receita_prevista_2027))+" anual. Média mensal equivalente: "+money(Number(d.receita_prevista_2027)/12)+"."));
     if(fr)resultList.push(row("Fator R informativo","Calculado",(fr.regulatory*100).toLocaleString("pt-BR",{maximumFractionDigits:2})+"% para análise preliminar, condicionado ao período e à confirmação contábil."));
     if(fr&&fr.revenue>0)resultList.push(row("Referência de folha para 28%","Calculado",money(fr.revenue*0.28)+" em 12 meses. Não representa recomendação de pró-labore ou necessidade de aumentar despesas."));
@@ -95,7 +125,9 @@
   }
   function renderProgress(){
     const p=progress(values());
-    $("simulationProgress").textContent="Dados principais: "+p.complete+"/"+p.total+" informados ("+p.percent+"%). "+(dirty?"Alterações não salvas.":"Preencha os dados pendentes; os resultados existentes são informativos.");
+    const windowPeriod=referenceWindow(values().competencia_referencia);
+    $("simulationProgress").textContent="Dados principais: "+p.complete+"/"+p.total+" informados ("+p.percent+"%). "+(windowPeriod?"RBT12: "+windowPeriod.start+" a "+windowPeriod.end+". ":"")+(dirty?"Alterações não salvas.":"Preencha os dados pendentes; os resultados existentes são informativos.");
+    warnings();
   }
   function showStep(next){
     if(!["dados","diagnostico","resultados"].includes(next))return;
@@ -110,11 +142,13 @@
     if(!client){
       form.reset();form.elements.competencia_referencia.value="2027-01";
       loadedClient=null;dirty=false;
+      updateExampleAvailability();
       info.textContent="Selecione um cliente no cabeçalho antes de preencher o estudo.";
       for(const control of form.elements)control.disabled=true;
       renderProgress();renderDiagnosis();renderResults();factorPreview();return;
     }
     for(const control of form.elements)control.disabled=false;
+    updateExampleAvailability();
     info.textContent="Carregando informações da empresa...";
     try{
       const response=await fetch("/api/simulacoes/perfil?cliente="+encodeURIComponent(client),{cache:"no-store"});
@@ -138,6 +172,9 @@
     if(saving)return;
     saving=true;$("simulationSave").disabled=true;
     const data=values();
+    if(warnings().length&&!window.confirm("Há campos suspeitos. Deseja salvar mesmo assim como dados não confirmados?")){
+      saving=false;$("simulationSave").disabled=false;return;
+    }
     try{
       const response=await fetch("/api/simulacoes/perfil",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({cliente_id:client,...data})});
       const result=await response.json();
@@ -152,6 +189,22 @@
   });
   for(const button of document.querySelectorAll("[data-simstep]"))button.onclick=()=>showStep(button.dataset.simstep);
   for(const button of document.querySelectorAll("[data-sim-next]"))button.onclick=()=>showStep(button.dataset.simNext);
+  $("simulationExample").onclick=()=>{
+    if(!isConsultSelected()||!selectedClient())return;
+    if(!window.confirm("Aplicar as hipóteses da Consult Services? Receita, equipe e pró-labore atuais serão substituídos. Folha e despesas ficarão vazias."))return;
+    form.elements.competencia_referencia.value="2027-01";
+    form.elements.regime_confirmado.value="simples";
+    form.elements.receita_12m.value="";
+    form.elements.receita_prevista_2027.value="156000";
+    form.elements.folha_12m.value="";
+    form.elements.despesas_12m.value="";
+    form.elements.estrutura_equipe.value="so_socios";
+    form.elements.prolabore_mensal.value="0";
+    form.elements.atividade_fator_r.value="nao_confirmado";
+    dirty=true;
+    info.textContent="Exemplo aplicado. A receita projetada é R$ 156 mil. O RBT12 segue em branco até confirmação das receitas de dezembro/2025 a novembro/2026.";
+    renderProgress();renderDiagnosis();renderResults();factorPreview();
+  };
   $("simulationReload").onclick=load;
   $("clientSelect").addEventListener("change",()=>{showStep("dados");load();});
   load();
