@@ -4,7 +4,7 @@
   const form = $("simulationForm");
   const info = $("simulationInfo");
   const cards = $("simulationScenarios");
-  const fields = ["receita_12m","receita_prevista_2027","folha_12m","despesas_12m","regime_confirmado"];
+  const fields = ["receita_12m","receita_prevista_2027","folha_12m","despesas_12m","prolabore_mensal","estrutura_equipe","regime_confirmado"];
   const scenarios = [
     ["Simples Nacional","Manter a tributação pelo Simples, com IBS/CBS dentro do regime quando aplicável."],
     ["Simples com IBS/CBS no regime regular","Avaliar opção legal, período e possíveis créditos antes de comparar."],
@@ -25,10 +25,28 @@
       return item;
     }));
   }
+  function factorPreview(){
+    const rawRevenue=form.elements.receita_12m.value;
+    const rawPayroll=form.elements.folha_12m.value;
+    const area=$("factorPreview");
+    if(rawRevenue===""||rawPayroll===""){area.textContent="RBT12 e folha elegível precisam ser informados. Pró-labore zero, isoladamente, não comprova folha total zero.";return;}
+    const revenue=Number(rawRevenue),payroll=Number(rawPayroll);
+    if(!Number.isFinite(revenue)||revenue<=0||!Number.isFinite(payroll)||payroll<0){
+      area.textContent="Para calcular a proporção, informe RBT12 maior que zero e folha elegível não negativa.";
+      return;
+    }
+    const proportion=payroll/revenue*100;
+    const formatted=new Intl.NumberFormat("pt-BR",{maximumFractionDigits:2}).format(proportion);
+    const threshold=proportion>=28?"atinge":"não atinge";
+    area.textContent="Relação informativa folha/RBT12: "+formatted+"%. A proporção "+threshold+" o patamar de 28%. Não confirma enquadramento tributário, nem calcula o DAS.";
+  }
+  form.elements.receita_12m.addEventListener("input",factorPreview);
+  form.elements.folha_12m.addEventListener("input",factorPreview);
   function selectedClient(){return $("clientSelect").value;}
   async function load(){
     if(!selectedClient()){
       form.reset();
+      factorPreview();
       info.textContent = "Selecione um cliente ativo no cabeçalho antes de preencher a simulação.";
       for(const control of form.elements)control.disabled=true;
       return;
@@ -43,8 +61,9 @@
       if(result.cliente!==selectedClient())return;
       form.reset();
       if(result.dados){
-        for(const key of fields)form.elements[key].value=result.dados[key]??(key==="regime_confirmado"?"nao_confirmado":"");
+        for(const key of fields)form.elements[key].value=result.dados[key]??(key==="regime_confirmado"?"nao_confirmado":key==="estrutura_equipe"?"nao_informado":"");
       }
+      factorPreview();
       info.textContent=result.dados?"Dados locais carregados. Nenhum imposto foi calculado.":"Nenhuma informação financeira cadastrada para este cliente.";
     }catch(e){info.textContent="Não foi possível consultar os dados: "+e.message;}
   }
@@ -68,5 +87,6 @@
   $("simulationReload").onclick=load;
   $("clientSelect").addEventListener("change",load);
   showScenarios();
+  factorPreview();
   load();
 })();
