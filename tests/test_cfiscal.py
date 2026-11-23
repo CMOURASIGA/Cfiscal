@@ -182,7 +182,7 @@ class Conferencia(unittest.TestCase):
         self.assertIn("PGDAS-D",diagnosis["acao"])
     def test_navegacao_telas_separadas(self):
         html=self.call("/").decode()
-        for view in ("painel","clientes","notas","integracoes"):
+        for view in ("painel","clientes","notas","simulacao","integracoes"):
             self.assertIn('data-view="'+view+'"',html)
             self.assertIn('data-nav="'+view+'"',html)
         self.assertIn('id="sidebarToggle"',html)
@@ -192,6 +192,26 @@ class Conferencia(unittest.TestCase):
         self.assertIn('data-nav="ajuda"',ajuda)
         self.assertIn('id="sidebarToggle"',ajuda)
         self.assertIn(b"CFiscalNavigate",self.call("/navigation.js"))
+    def test_simulacao_preparatoria_isolada_por_cliente(self):
+        xml=self.xml
+        first=self.register(xml)
+        second=self.register((server.ROOT/"exemplos/201.xml").read_text(encoding="utf8"))
+        self.assertIsNone(self.call("/api/simulacoes/perfil?cliente="+first)["dados"])
+        payload={"cliente_id":first,"regime_confirmado":"simples","receita_12m":"156000.00",
+                 "receita_prevista_2027":"170000.00","folha_12m":"0","despesas_12m":"30000.00"}
+        result=self.call("/api/simulacoes/perfil",payload)
+        self.assertTrue(result["ok"])
+        self.assertIn("Nenhum imposto",result["aviso"])
+        self.assertIsNone(self.call("/api/simulacoes/perfil?cliente="+second)["dados"])
+        self.assertEqual(self.call("/api/simulacoes/perfil?cliente="+first)["dados"]["receita_12m"],"156000.00")
+        server.init()
+        self.assertEqual(self.call("/api/simulacoes/perfil?cliente="+first)["dados"]["regime_confirmado"],"simples")
+        with self.assertRaises(error.HTTPError):
+            self.call("/api/simulacoes/perfil",dict(payload,receita_12m="-1"))
+        with self.assertRaises(error.HTTPError):
+            self.call("/api/simulacoes/perfil",dict(payload,receita_12m="abc"))
+        with self.assertRaises(error.HTTPError):
+            self.call("/api/simulacoes/perfil",dict(payload,cliente_id="inexistente"))
     def test_web(self):
         self.assertIn(b"CFiscal",self.call("/"))
         self.assertEqual(self.call("/api/notas"),[])
