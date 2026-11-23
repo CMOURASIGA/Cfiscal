@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Amostra fictícia reduzida para homologação, sem assinatura ou validade fiscal. -->
+<NFSe xmlns="http://www.sped.fazenda.gov.br/nfse" versao="1.01">
+  <infNFSe Id="DEMO201">
+    <nNFSe>201</nNFSe>
+    <emit><CNPJ>00000000000272</CNPJ><xNome>Oficina Digital Exemplo</xNome></emit>
+    <IBSCBS><valores><vBC>1000.00</vBC></valores><totCIBS>
+      <gIBS><vIBSTot>12.50</vIBSTot><gIBSUFTot><vIBSUF>6.25</vIBSUF></gIBSUFTot><gIBSMunTot></gIBSMunTot></gIBS>
+      <gCBS><vCBS>27.50</vCBS></gCBS>
+    </totCIBS></IBSCBS>
+    <DPS versao="1.01"><infDPS><dCompet>2027-03-15</dCompet><prest><regTrib><opSimpNac>3</opSimpNac></regTrib></prest>
+      <serv><cServ><xDescServ>Serviço de demonstração</xDescServ><cNBS>122011200</cNBS></cServ></serv>
+      <valores><vServPrest><vServ>1000.00</vServ></vServPrest></valores>
+      <IBSCBS><valores><trib><gIBSCBS><CST>000</CST><cClassTrib>000001</cClassTrib></gIBSCBS></trib></valores></IBSCBS>
+    </infDPS></DPS>
+  </infNFSe>
+</NFSe>
