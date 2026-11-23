@@ -121,6 +121,15 @@ function detail(n) {
       sources.append(anchor);
     }
     diagnosisBox.append(sources);
+    if(diagnostic.cenario_2027){
+      const scenario=el("details",undefined,"scenario-2027");
+      scenario.append(el("summary","O que precisaria conferir para uma nota equivalente em 2027?"));
+      scenario.append(el("p",diagnostic.cenario_2027.conclusao));
+      const checklist=el("ul");
+      for(const item of diagnostic.cenario_2027.confirmar_com_contabilidade)checklist.append(el("li",item));
+      scenario.append(checklist);
+      diagnosisBox.append(scenario);
+    }
     diagnosisBox.classList.add("diagnosis-"+diagnostic.nivel);
   }
   $("overview").replaceChildren(...(diagnostic?[diagnosisBox]:[]),el("h3","Conferência aritmética do documento"),pill(n.status),el("p",n.reason),values);
