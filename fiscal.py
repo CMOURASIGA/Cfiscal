@@ -79,7 +79,28 @@ def contextual_diagnosis(data):
         title="Análise tributária contextual ainda não conclusiva"
         explanation="Não foi possível concluir a aplicabilidade de todos os campos com as informações atualmente disponíveis."
         action="Confirmar competência, enquadramento, operação e normas aplicáveis com o contador."
+    cenario_2027 = {
+        "titulo":"Preparação de operação equivalente em 2027",
+        "tipo":"Checklist, não cálculo nem XML válido",
+        "dados_confirmados_no_documento":{
+            "competencia_original":date,
+            "regime_no_xml":regime_label,
+            "valor_do_servico":data.get("gross") or None,
+            "codigo_servico":data.get("codigo_servico") or None,
+            "nbs":data.get("nbs") or None,
+        },
+        "confirmar_com_contabilidade":[
+            "Regime efetivo da empresa em 2027 e opção de recolhimento de IBS/CBS.",
+            "Alíquotas efetivas e dados do PGDAS-D aplicáveis à competência.",
+            "CST, cClassTrib, enquadramento do serviço e eventuais benefícios.",
+            "Município de incidência e regras de local da prestação.",
+            "Leiaute, XSD e regras de validação oficiais vigentes na data de emissão."
+        ],
+        "conclusao":"Não é possível determinar valores de IBS/CBS ou gerar documento fiscal válido somente com o XML de 2026.",
+        "referencia":SOURCE_PGDAS
+    }
     return {
+        "cenario_2027":cenario_2027,
         "versao_regra":RULE_VERSION, "nivel":level, "titulo":title,
         "explicacao":explanation, "acao":action, "regime_informado":regime_label,
         "competencia":date, "campos_ibs_cbs_ausentes":missing,
