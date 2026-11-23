@@ -7,6 +7,7 @@ import sqlite3
 import sys
 import webbrowser
 from datetime import datetime, timezone
+from decimal import Decimal, InvalidOperation
 from functools import partial
 from contextlib import closing
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
@@ -33,6 +34,7 @@ def init():
         CREATE TABLE IF NOT EXISTS clients (id TEXT PRIMARY KEY, name TEXT NOT NULL, cnpj TEXT NOT NULL UNIQUE, active INTEGER NOT NULL DEFAULT 1, created TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS note_clients (note_id TEXT PRIMARY KEY REFERENCES notes(id), client_id TEXT NOT NULL REFERENCES clients(id), created TEXT NOT NULL);
         CREATE INDEX IF NOT EXISTS idx_note_clients_client ON note_clients(client_id);
+        CREATE TABLE IF NOT EXISTS simulation_profiles (client_id TEXT PRIMARY KEY REFERENCES clients(id), data TEXT NOT NULL, updated TEXT NOT NULL);
         """)
 
 def upstream(kind, body, mime):
@@ -159,6 +161,12 @@ class Handler(SimpleHTTPRequestHandler):
         path = urlsplit(self.path).path
         if path == "/api/exemplos":
             return self.send_data([{"name":p.name,"xml":p.read_text(encoding="utf8")} for p in sorted((ROOT/"exemplos").glob("*.xml"))])
+        if path == "/api/simulacoes/perfil":
+            client_id = parse_qs(urlsplit(self.path).query).get("cliente", [""])[0]
+            with closing(sqlite3.connect(DB)) as db:
+                row = db.execute("SELECT data,updated FROM simulation_profiles WHERE client_id=?",(client_id,)).fetchone() if client_id else None
+            return self.send_data({"cliente":client_id or None,"dados":json.loads(row[0]) if row else None,"atualizado":row[1] if row else None,
+               "situacao":"Dados preparatórios; cálculo de tributos e recomendação de regime indisponíveis nesta fase."})
         if path == "/api/clientes":
             with closing(sqlite3.connect(DB)) as db:
                 clients = [dict(id=i,name=n,cnpj=c,active=bool(a)) for i,n,c,a in db.execute("SELECT id,name,cnpj,active FROM clients ORDER BY name")]
@@ -216,7 +224,31 @@ class Handler(SimpleHTTPRequestHandler):
                 raise ValueError("Tamanho inválido.")
             body = json.loads(self.rfile.read(size))
             with closing(sqlite3.connect(DB, timeout=15)) as db, db:
-                if self.path == "/api/clientes":
+                if self.path == "/api/simulacoes/perfil":
+                    client_id = str(body.get("cliente_id",""))
+                    if not db.execute("SELECT 1 FROM clients WHERE id=? AND active=1",(client_id,)).fetchone():
+                        raise ValueError("Selecione um cliente cadastrado e ativo.")
+                    values = {}
+                    for key in ("receita_12m","receita_prevista_2027","folha_12m","despesas_12m"):
+                        raw = body.get(key)
+                        if raw in ("", None):
+                            values[key] = None
+                            continue
+                        try:
+                            number=Decimal(str(raw))
+                        except InvalidOperation as exc:
+                            raise ValueError("Informe valores monetários válidos.") from exc
+                        if not number.is_finite() or number<0 or number>Decimal("999999999999.99") or number.as_tuple().exponent < -2:
+                            raise ValueError("Os valores devem ser não negativos e ter até duas casas decimais.")
+                        values[key]=str(number)
+                    regime=str(body.get("regime_confirmado","nao_confirmado"))
+                    if regime not in ("nao_confirmado","simples","presumido","real"):
+                        raise ValueError("Regime selecionado inválido.")
+                    values.update(regime_confirmado=regime, exercicio=2027)
+                    db.execute("INSERT INTO simulation_profiles(client_id,data,updated) VALUES(?,?,?) ON CONFLICT(client_id) DO UPDATE SET data=excluded.data,updated=excluded.updated",
+                               (client_id,json.dumps(values),now()))
+                    result={"ok":True,"dados":values,"aviso":"Dados salvos localmente. Nenhum imposto foi calculado e nenhuma mudança de regime foi recomendada."}
+                elif self.path == "/api/clientes":
                     name = str(body.get("nome","")).strip()
                     cnpj = re.sub(r"\D","",str(body.get("cnpj","")))
                     if len(name)<3 or len(name)>150 or not re.fullmatch(r"\d{14}",cnpj):
