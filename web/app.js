@@ -3,7 +3,7 @@ const $ = id => document.getElementById(id);
 const currency = new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"});
 const money = v => v === null || v === "" || v === undefined ? "Ausente" : currency.format(v);
 const states = ["Valores coincidentes","Divergência","Dados insuficientes"];
-let notes = [], current, timer;
+let notes = [], current, timer, clients = [], legacyMode = false;
 function el(tag, value, cls) {
   const node = document.createElement(tag);
   if (value !== undefined) node.textContent = value;
@@ -50,7 +50,12 @@ function render() {
   $("empty").textContent = visible.length ? "" : notes.length ? "Nenhuma nota corresponde aos filtros." : "Carregue os exemplos ou importe os XMLs do seu computador.";
 }
 async function refresh() {
-  notes=await api("notas");
+  const selectedClient=$("clientSelect").value;
+  notes=await api("notas?cliente="+encodeURIComponent(legacyMode?"pendentes":selectedClient));
+  $("clientInfo").textContent=legacyMode?"Visualizando notas antigas sem cliente. Para vincular, selecione primeiro o cliente correspondente ao CNPJ.": selectedClient?"Notas e importações vinculadas ao cliente selecionado.":"Selecione ou cadastre um cliente para visualizar e importar notas.";
+  $("legacySection").hidden=false;
+  $("legacy").hidden=legacyMode;
+  $("backClient").hidden=!legacyMode;
   const selected=$("company").value;
   const companies=new Map(notes.map(n=>[n.cnpj,n.company||n.cnpj]));
   $("company").replaceChildren(new Option("Todas as empresas",""),...Array.from(companies,([v,t])=>new Option(t+" · "+v,v)));
@@ -58,6 +63,9 @@ async function refresh() {
   render();
 }
 async function batch(files) {
+  const clientId=$("clientSelect").value;
+  if(!clientId || legacyMode){message("Selecione um cliente cadastrado antes de importar.");return;}
+  if(!files.length)return;
   $("import").disabled=$("demo").disabled=true;
   $("batch").replaceChildren();$("receipts").hidden=false;$("receipts").open=true;
   let added=0, repeated=0, rejected=0;
@@ -67,7 +75,7 @@ async function batch(files) {
       try {
         if(file.size>5*1024*1024) throw new Error("Máximo de 5 MiB por XML.");
         const xml=file.xml ?? await file.text();
-        const r=await api("importar",{xml});
+        const r=await api("importar",{xml,cliente_id:clientId});
         if(r.importada) added++; else repeated++;
         row.append(el("span",file.name+" · Nota "+r.numero+" · "+(r.importada?"Importada":"Já estava na fila. A revisão anterior foi preservada.")));
         const open=el("button","Abrir nota "+r.numero);
@@ -91,6 +99,15 @@ function detail(n) {
     "IBS declarado":money(n.ibs),"Soma das parcelas":money(n.expected===null?null:n.expected/100),
     "Diferença":money(n.difference===null?null:n.difference/100)})) values.append(el("dt",key),el("dd",val||"Ausente"));
   $("overview").replaceChildren(pill(n.status),el("p",n.reason),values);
+  if(legacyMode){
+    const btn=el("button","Vincular ao cliente selecionado");
+    btn.onclick=async()=>{
+      const selected=$("clientSelect").value;
+      if(!selected){message("Selecione primeiro um cliente.");return;}
+      try{await api("vincular",{id:n.id,cliente_id:selected});$("drawer").close();legacyMode=false;await refresh();message("Nota vinculada ao cliente.");}catch(e){message(e.message);}
+    };
+    $("overview").append(el("p","Nota antiga sem vínculo: selecione um cliente com o mesmo CNPJ antes de vincular."),btn);
+  }
   $("review").reset(); $("review").elements.responsavel.value=historyOf(n).at(-1)?.data.responsavel||"";
   $("history").replaceChildren(...historyOf(n).slice().reverse().map(e=>{
     const box=el("div",undefined,"event");
@@ -143,10 +160,10 @@ async function submit(form,action) {
 function download(blob,name) {
   const url=URL.createObjectURL(blob),a=el("a");a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),2000);
 }
-$("review").onsubmit=e=>{e.preventDefault();submit(e.target,()=>api("revisar",{id:current.id,...Object.fromEntries(new FormData(e.target))}));};
-$("engine").onsubmit=e=>{e.preventDefault();submit(e.target,()=>api("calcular",{id:current.id,motor:$("motor").value,entrada:payload(Object.fromEntries(new FormData(e.target)),$("motor").value==="regular")}));};
+$("review").onsubmit=e=>{e.preventDefault();submit(e.target,()=>api("revisar",{id:current.id,cliente_id:$("clientSelect").value,...Object.fromEntries(new FormData(e.target))}));};
+$("engine").onsubmit=e=>{e.preventDefault();submit(e.target,()=>api("calcular",{id:current.id,cliente_id:$("clientSelect").value,motor:$("motor").value,entrada:payload(Object.fromEntries(new FormData(e.target)),$("motor").value==="regular")}));};
 $("motor").onchange=engineFields;
-$("pdf").onclick=async()=>{try{download(await api("pdf",{id:current.id}),"DANFSe-"+current.number+".pdf");}catch(e){message(e.message);}};
+$("pdf").onclick=async()=>{try{download(await api("pdf",{id:current.id,cliente_id:$("clientSelect").value}),"DANFSe-"+current.number+".pdf");}catch(e){message(e.message);}};
 $("print").onclick=()=>window.print();
 $("close").onclick=()=>$("drawer").close();
 $("import").onclick=()=>$("files").click();
@@ -159,4 +176,25 @@ $("export").onclick=()=>{
 };
 for(const id of ["company","month","status","workflow"])$(id).onchange=render;
 document.querySelector('a[href="#integracoes"]').onclick=()=>$("integracoes").open=true;
-refresh().catch(e=>message(e.message));
+async function refreshClients(selectId=""){
+  clients=await api("clientes");
+  const existing=selectId || $("clientSelect").value;
+  $("clientSelect").replaceChildren(new Option("Selecione um cliente",""),...clients.filter(c=>c.active).map(c=>new Option(c.name+" · "+c.cnpj,c.id)));
+  $("clientSelect").value=existing;
+  if(!selectId && existing && !$("clientSelect").value)$("clientSelect").value="";
+}
+$("clientForm").onsubmit=async e=>{
+  e.preventDefault();
+  const form=e.target, button=form.querySelector("button");
+  button.disabled=true;
+  try{
+    const data=Object.fromEntries(new FormData(form));
+    const created=await api("clientes",data);
+    form.reset();await refreshClients(created.id);legacyMode=false;await refresh();
+    message("Cliente cadastrado. Selecione XMLs cujo emitente tenha o CNPJ informado.");
+  }catch(err){message(err.message);}finally{button.disabled=false;}
+};
+$("clientSelect").onchange=()=>{legacyMode=false;refresh().catch(e=>message(e.message));};
+$("legacy").onclick=()=>{legacyMode=true;refresh().catch(e=>message(e.message));};
+$("backClient").onclick=()=>{legacyMode=false;refresh().catch(e=>message(e.message));};
+refreshClients().then(()=>refresh()).catch(e=>message(e.message));
