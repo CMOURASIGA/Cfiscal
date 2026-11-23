@@ -1,0 +1,37 @@
+name: CFiscal - testes develop
+on:
+  push:
+    branches: [develop]
+  pull_request:
+    branches: [develop]
+  workflow_dispatch:
+jobs:
+  python:
+    name: Python ${{ matrix.os }} ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Compilar Python
+        run: python -m compileall -q fiscal.py server.py tests
+      - name: Testes do CFiscal
+        run: python -m unittest discover -s tests -v
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Sintaxe dos scripts
+        run: |
+          node --check web/app.js
+          node --check web/dashboard.js
+          node --check web/componentes/consult-tabs.js
