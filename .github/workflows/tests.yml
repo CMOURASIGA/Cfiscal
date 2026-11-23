@@ -36,4 +36,7 @@ jobs:
           node --check web/dashboard.js
           node --check web/navigation.js
           node --check web/simulation.js
+          node --check web/preliminary.js
+      - name: Testar exemplos financeiros
+        run: node --test tests/preliminary.test.js
           node --check web/componentes/consult-tabs.js
