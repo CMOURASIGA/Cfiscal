@@ -37,13 +37,13 @@ function render() {
   $("metrics").replaceChildren(...["Notas no filtro",...states].map((label,i)=>{
     const box = el("div",undefined,"metric");
     box.style.setProperty("--tone",["#003B73","#52856c","#ce9948","#8798b5"][i]);
-    box.append(el("span",label),el("strong",i?visible.filter(n=>n.status===label).length:visible.length));
+    box.append(el("span",label==="Dados insuficientes"?"Sem totalização do IBS":label),el("strong",i?visible.filter(n=>n.status===label).length:visible.length));
     return box;
   }));
   $("rows").replaceChildren(...visible.map(n=>{
     const row=el("tr"), doc=el("td"), result=el("td"), action=el("td"), open=el("button","Ver nota");
     doc.append(el("strong","Nº "+n.number),el("small",n.company||n.cnpj));
-    result.append(pill(n.status));open.onclick=()=>detail(n); action.append(open);
+    result.append(pill(n.diagnostico?.titulo?.startsWith("Ausência de IBS/CBS")?"Ausência contextualizada":n.status));open.onclick=()=>detail(n); action.append(open);
     row.append(doc,el("td",n.date.slice(0,7)||"Ausente"),el("td",money(n.ibs)),result,el("td",workflow(n)),action);
     return row;
   }));
