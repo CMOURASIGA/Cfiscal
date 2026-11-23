@@ -1,6 +1,7 @@
 import functools
 from contextlib import closing
 import json
+import re
 import tempfile
 import threading
 import unittest
@@ -9,7 +10,7 @@ from pathlib import Path
 from urllib import request, error
 
 import server
-from fiscal import parse
+from fiscal import parse, contextual_diagnosis
 
 class MotorDeTeste(BaseHTTPRequestHandler):
     def log_message(self,*args):
@@ -154,6 +155,31 @@ class Conferencia(unittest.TestCase):
         self.assertEqual(accountant["clientes"][0]["notas"],1)
         self.assertEqual(self.call("/api/dashboard")["notas"],0)
         with self.assertRaises(error.HTTPError): self.call("/api/dashboard?competencia=invalida")
+    def test_diagnostico_simples_2026_sem_ibscbs(self):
+        # XML 100% sintético: sem dados reais do usuário.
+        xml=(server.ROOT/"exemplos/201.xml").read_text(encoding="utf8")
+        xml=xml.replace("2027-03-15","2026-11-09")
+        xml=re.sub(r"<IBSCBS><valores><vBC>.*?</IBSCBS>","",xml,count=1,flags=re.DOTALL)
+        data=parse(xml)
+        self.assertEqual(data["regime"],"3")
+        self.assertEqual(data["date"],"2026-11-09")
+        self.assertEqual(data["diagnostico"]["nivel"],"informativo")
+        self.assertIn("compatível",data["diagnostico"]["titulo"])
+        self.assertEqual(data["diagnostico"]["conformidade_integral"],"Não determinada")
+        client=self.register(xml)
+        self.import_xml(xml)
+        self.assertEqual(self.call("/api/notas?cliente="+client)[0]["diagnostico"]["nivel"],"informativo")
+        dash=self.call("/api/dashboard?cliente="+client)
+        self.assertEqual(dash["ausencias_compativeis_2026"],1)
+        self.assertIsNone(dash["cbs_declarada"])
+        self.assertIsNone(dash["ibs_declarado"])
+    def test_diagnostico_2027_nao_inventa_calculo(self):
+        xml=(server.ROOT/"exemplos/201.xml").read_text(encoding="utf8")
+        xml=re.sub(r"<IBSCBS><valores><vBC>.*?</IBSCBS>","",xml,count=1,flags=re.DOTALL)
+        diagnosis=parse(xml)["diagnostico"]
+        self.assertEqual(diagnosis["nivel"],"revisao")
+        self.assertEqual(diagnosis["calculo_tributario"],"Não executado")
+        self.assertIn("PGDAS-D",diagnosis["acao"])
     def test_web(self):
         self.assertIn(b"CFiscal",self.call("/"))
         self.assertEqual(self.call("/api/notas"),[])
