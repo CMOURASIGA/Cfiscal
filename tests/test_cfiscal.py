@@ -73,7 +73,7 @@ class Conferencia(unittest.TestCase):
             self.assertEqual(first["id"],repeat["id"])
             self.assertEqual(first["numero"],f.stem)
         self.assertEqual(len(self.call("/api/notas")),6)
-        self.assertIn("Recebi um XML da Consult",self.call("/ajuda.html").decode())
+        self.assertIn("Recebi um XML de nota de serviço",self.call("/ajuda.html").decode())
     def test_invalid(self):
         for xml in ("<NFSe>","<NFe/>","<!DOCTYPE x><x/>"):
             with self.assertRaises(ValueError):parse(xml)
