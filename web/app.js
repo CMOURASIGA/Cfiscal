@@ -98,7 +98,32 @@ function detail(n) {
     "Valor do serviço":money(n.gross),"CBS declarada":money(n.cbs),"IBS estadual":money(n.state),"IBS municipal":money(n.city),
     "IBS declarado":money(n.ibs),"Soma das parcelas":money(n.expected===null?null:n.expected/100),
     "Diferença":money(n.difference===null?null:n.difference/100)})) values.append(el("dt",key),el("dd",val||"Ausente"));
-  $("overview").replaceChildren(pill(n.status),el("p",n.reason),values);
+  const diagnostic=n.diagnostico;
+  const diagnosisBox=el("section",undefined,"diagnosis-box");
+  if(diagnostic){
+    diagnosisBox.append(el("h3","Diagnóstico fiscal contextual"),el("strong",diagnostic.titulo),el("p",diagnostic.explicacao));
+    const meta=el("dl");
+    for(const [label,value] of Object.entries({
+      "Regime no XML":diagnostic.regime_informado,
+      "Regra aplicada":diagnostic.versao_regra,
+      "Conferência aritmética":diagnostic.verificacao_aritmetica,
+      "Validação da assinatura":diagnostic.validacao_assinatura,
+      "Validação de XSD":diagnostic.validacao_xsd,
+      "Cálculo do tributo devido":diagnostic.calculo_tributario,
+      "Conformidade integral":diagnostic.conformidade_integral
+    }))meta.append(el("dt",label),el("dd",value));
+    diagnosisBox.append(meta,el("h3","O que fazer agora"),el("p",diagnostic.acao));
+    const sources=el("div",undefined,"diagnosis-sources");
+    sources.append(el("strong","Referências oficiais"));
+    for(const source of diagnostic.fontes){
+      const anchor=el("a",source.titulo);
+      anchor.href=source.url;anchor.target="_blank";anchor.rel="noopener noreferrer";
+      sources.append(anchor);
+    }
+    diagnosisBox.append(sources);
+    diagnosisBox.classList.add("diagnosis-"+diagnostic.nivel);
+  }
+  $("overview").replaceChildren(...(diagnostic?[diagnosisBox]:[]),el("h3","Conferência aritmética do documento"),pill(n.status),el("p",n.reason),values);
   if(legacyMode){
     const btn=el("button","Vincular ao cliente selecionado");
     btn.onclick=async()=>{
