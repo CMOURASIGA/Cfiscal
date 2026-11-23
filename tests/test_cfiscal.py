@@ -79,16 +79,16 @@ class Conferencia(unittest.TestCase):
             self.import_xml(self.xml.replace("1.48","2.48"))
     def test_importacao_separada_e_ajuda(self):
         for f in self.call("/api/exemplos"):
-            self.call("/api/importar",{"xml":f["xml"]})
+            self.import_xml(f["xml"])
         for f in (server.ROOT/"importar").glob("*.xml"):
             body={"xml":f.read_text(encoding="utf8")}
             first=self.import_xml(body["xml"])
-            repeat=self.call("/api/importar",body)
+            repeat=self.import_xml(body["xml"])
             self.assertTrue(first["importada"])
             self.assertFalse(repeat["importada"])
             self.assertEqual(first["id"],repeat["id"])
             self.assertEqual(first["numero"],f.stem)
-        self.assertEqual(len(self.call("/api/notas")),7)
+        self.assertEqual(len(self.all_notes()),7)
         self.assertIn("Recebi um XML de nota de serviço",self.call("/ajuda.html").decode())
     def test_invalid(self):
         for xml in ("<NFSe>","<NFe/>","<!DOCTYPE x><x/>"):
@@ -98,14 +98,14 @@ class Conferencia(unittest.TestCase):
         n=self.load_note()
         self.call("/api/revisar",dict(id=n["id"],cliente_id=self.selected,situacao="Concluída",responsavel="Piloto",comentario="Revisada"))
         server.init()
-        n=self.call("/api/notas")[0]
+        n=self.notes()[0]
         self.assertEqual(n["status"],"Divergência")
         self.assertEqual(n["events"][0]["data"]["situacao"],"Concluída")
     def test_contratos_http(self):
         n=self.load_note()
         for kind,state in (("regular","CALCULO_SIMULADO"),("simples","CALCULADO")):
             self.call("/api/calcular",dict(id=n["id"],cliente_id=self.selected,motor=kind,entrada={"itens":[{"numero":1}]}))
-            event=self.call("/api/notas")[0]["events"][-1]
+            event=self.notes()[0]["events"][-1]
             self.assertEqual(event["kind"],kind)
             self.assertIn(state,event["data"]["resultado"])
             self.assertIn("IBS R$ 1.00",event["data"]["resultado"])
@@ -137,6 +137,22 @@ class Conferencia(unittest.TestCase):
         self.assertTrue(self.call("/api/vincular",{"id":data["id"],"cliente_id":client})["ok"])
         self.assertEqual(len(self.call("/api/notas?cliente="+client)),1)
         self.assertEqual(self.call("/api/notas?cliente=pendentes"),[])
+    def test_dashboard_profiles(self):
+        self.import_xml(self.xml)
+        client=self.selected
+        business=self.call("/api/dashboard?cliente="+client)
+        self.assertEqual(business["notas"],1)
+        self.assertEqual(business["divergencias"],1)
+        self.assertEqual(business["coincidentes_aritmeticos"],0)
+        self.assertEqual(business["valor_servicos_informado"],"1200.00")
+        self.assertEqual(business["tributacao_calculada"],None)
+        self.assertEqual(business["conformidade_fiscal_integral"],"Não verificada")
+        self.assertEqual(self.call("/api/dashboard?cliente="+client+"&competencia=2026-11")["notas"],0)
+        accountant=self.call("/api/dashboard?perfil=contador")
+        self.assertEqual(len(accountant["clientes"]),1)
+        self.assertEqual(accountant["clientes"][0]["notas"],1)
+        self.assertEqual(self.call("/api/dashboard")["notas"],0)
+        with self.assertRaises(error.HTTPError): self.call("/api/dashboard?competencia=invalida")
     def test_web(self):
         self.assertIn(b"CFiscal",self.call("/"))
         self.assertEqual(self.call("/api/notas"),[])
