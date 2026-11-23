@@ -1,3 +1,24 @@
+# Navegação separada do CFiscal
+
+A interface foi reorganizada em telas independentes, com rotas locais por hash (sem novo backend):
+- `/#painel`: Dashboard do empresário/contador
+- `/#clientes`: cadastro de empresas e seleção do cliente ativo no cabeçalho
+- `/#notas`: importação múltipla, fila, filtros, diagnósticos, revisões e motores por nota em abas
+- `/#integracoes`: documentação dos motores locais
+- `/ajuda.html`: ajuda fiscal com o mesmo menu
+
+O menu é retrátil e guarda somente a preferência visual no localStorage. O cabeçalho apresenta o cliente selecionado para reutilização entre as telas. Dados fiscais e vínculos permanecem no SQLite local. Não há Supabase nem autenticação multiusuário nessa fase.
+
+## Aceite UX
+1. Cada item da navegação abre somente uma tela de rotina (sem rolagem por todos os módulos).
+2. Menu recolhe/expande e permanece funcional no celular.
+3. Indicadores do dashboard abrem Notas fiscais com o filtro correspondente.
+4. Carteira do contador abre a lista de notas do cliente selecionado.
+5. Importações e cadastro permanecem funcionais, e a nota mantém abas Conferência, Revisão e Motores.
+6. Nenhuma tabela, XML ou cadastro é apagado na atualização.
+
+---
+
 # CFiscal - Dashboards locais por perfil (Sprint 01)
 
 Implementação na branch `develop`, sem dados fictícios no painel.
