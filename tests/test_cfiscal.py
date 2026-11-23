@@ -164,6 +164,7 @@ class Conferencia(unittest.TestCase):
         self.assertEqual(data["regime"],"3")
         self.assertEqual(data["date"],"2026-11-09")
         self.assertEqual(data["diagnostico"]["nivel"],"informativo")
+        self.assertEqual(data["diagnostico"]["verificacao_aritmetica"],"Não executada")
         self.assertIn("compatível",data["diagnostico"]["titulo"])
         self.assertEqual(data["diagnostico"]["conformidade_integral"],"Não determinada")
         client=self.register(xml)
