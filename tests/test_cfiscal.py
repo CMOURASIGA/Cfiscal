@@ -200,7 +200,8 @@ class Conferencia(unittest.TestCase):
         self.assertIsNone(self.call("/api/simulacoes/perfil?cliente="+first)["dados"])
         payload={"cliente_id":first,"regime_confirmado":"simples","receita_12m":"156000.00",
                  "receita_prevista_2027":"170000.00","folha_12m":"0","despesas_12m":"30000.00",
-                 "prolabore_mensal":"0","estrutura_equipe":"so_socios"}
+                 "prolabore_mensal":"0","estrutura_equipe":"so_socios",
+                 "atividade_fator_r":"nao_confirmado","competencia_referencia":"2027-01"}
         result=self.call("/api/simulacoes/perfil",payload)
         self.assertTrue(result["ok"])
         self.assertIn("Nenhum imposto",result["aviso"])
@@ -208,6 +209,7 @@ class Conferencia(unittest.TestCase):
         self.assertEqual(self.call("/api/simulacoes/perfil?cliente="+first)["dados"]["receita_12m"],"156000.00")
         self.assertEqual(self.call("/api/simulacoes/perfil?cliente="+first)["dados"]["prolabore_mensal"],"0")
         self.assertEqual(self.call("/api/simulacoes/perfil?cliente="+first)["dados"]["estrutura_equipe"],"so_socios")
+        self.assertEqual(self.call("/api/simulacoes/perfil?cliente="+first)["dados"]["competencia_referencia"],"2027-01")
         server.init()
         self.assertEqual(self.call("/api/simulacoes/perfil?cliente="+first)["dados"]["regime_confirmado"],"simples")
         with self.assertRaises(error.HTTPError):
@@ -218,6 +220,22 @@ class Conferencia(unittest.TestCase):
             self.call("/api/simulacoes/perfil",dict(payload,cliente_id="inexistente"))
         with self.assertRaises(error.HTTPError):
             self.call("/api/simulacoes/perfil",dict(payload,prolabore_mensal="-1"))
+        with self.assertRaises(error.HTTPError):
+            self.call("/api/simulacoes/perfil",dict(payload,competencia_referencia="2027-13"))
+        with self.assertRaises(error.HTTPError):
+            self.call("/api/simulacoes/perfil",dict(payload,atividade_fator_r="outro"))
+    def test_simulador_fluxo_guiado(self):
+        html=self.call("/").decode()
+        for name in ("competencia_referencia","atividade_fator_r","prolabore_mensal","folha_12m"):
+            self.assertIn('name="'+name+'"',html)
+        for step in ("dados","diagnostico","resultados"):
+            self.assertIn('data-simstep="'+step+'"',html)
+            self.assertIn('data-sim-panel="'+step+'"',html)
+        js=self.call("/simulation.js").decode()
+        self.assertIn("renderDiagnosis",js)
+        self.assertIn("renderResults",js)
+        self.assertIn('payroll===0?0.01:raw',js)
+
     def test_web(self):
         self.assertIn(b"CFiscal",self.call("/"))
         self.assertEqual(self.call("/api/notas"),[])
