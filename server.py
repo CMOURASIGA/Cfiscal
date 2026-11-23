@@ -85,7 +85,7 @@ def dashboard_for(notes):
         if status in counts:
             counts[status] += 1
         date = str(note.get("date",""))[:7]
-        if re.fullmatch(r"\\d{4}-\\d{2}",date):
+        if re.fullmatch(r"\d{4}-\d{2}",date):
             month = monthly.setdefault(date,{"competencia":date,"notas":0,"divergencias":0,"dados_insuficientes":0})
             month["notas"] += 1
             month["divergencias"] += int(status=="Divergência")
@@ -160,7 +160,7 @@ class Handler(SimpleHTTPRequestHandler):
             query = parse_qs(urlsplit(self.path).query)
             client_id = query.get("cliente", [""])[0]
             competencia = query.get("competencia", [""])[0]
-            if competencia and not re.fullmatch(r"\\d{4}-\\d{2}",competencia):
+            if competencia and not re.fullmatch(r"\d{4}-\d{2}",competencia):
                 return self.send_data({"error":"Competência inválida."},422)
             with closing(sqlite3.connect(DB)) as db:
                 if path == "/api/dashboard" and query.get("perfil",[""])[0] == "contador":
@@ -209,8 +209,8 @@ class Handler(SimpleHTTPRequestHandler):
             with closing(sqlite3.connect(DB, timeout=15)) as db, db:
                 if self.path == "/api/clientes":
                     name = str(body.get("nome","")).strip()
-                    cnpj = re.sub(r"\\D","",str(body.get("cnpj","")))
-                    if len(name)<3 or len(name)>150 or not re.fullmatch(r"\\d{14}",cnpj):
+                    cnpj = re.sub(r"\D","",str(body.get("cnpj","")))
+                    if len(name)<3 or len(name)>150 or not re.fullmatch(r"\d{14}",cnpj):
                         raise ValueError("Informe nome (3 a 150 caracteres) e CNPJ com 14 dígitos.")
                     if db.execute("SELECT 1 FROM clients WHERE cnpj=?",(cnpj,)).fetchone():
                         raise ValueError("Cliente já cadastrado com este CNPJ.")
