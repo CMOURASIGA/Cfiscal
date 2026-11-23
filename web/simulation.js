@@ -1,92 +1,158 @@
 "use strict";
 (() => {
-  const $ = id => document.getElementById(id);
-  const form = $("simulationForm");
-  const info = $("simulationInfo");
-  const cards = $("simulationScenarios");
-  const fields = ["receita_12m","receita_prevista_2027","folha_12m","despesas_12m","prolabore_mensal","estrutura_equipe","regime_confirmado"];
-  const scenarios = [
-    ["Simples Nacional","Manter a tributação pelo Simples, com IBS/CBS dentro do regime quando aplicável."],
-    ["Simples com IBS/CBS no regime regular","Avaliar opção legal, período e possíveis créditos antes de comparar."],
-    ["Lucro Presumido","Considerar IRPJ, CSLL, PIS/Cofins/CBS, IBS, folha e demais obrigações."],
-    ["Lucro Real","Considerar resultado tributável, créditos elegíveis, folha e obrigações adicionais."]
+  const $=id=>document.getElementById(id);
+  const form=$("simulationForm"), info=$("simulationInfo"), cards=$("simulationScenarios");
+  const fields=["competencia_referencia","atividade_fator_r","regime_confirmado","receita_12m","receita_prevista_2027","folha_12m","despesas_12m","estrutura_equipe","prolabore_mensal"];
+  const defaults={competencia_referencia:"2027-01",atividade_fator_r:"nao_confirmado",regime_confirmado:"nao_confirmado",estrutura_equipe:"nao_informado"};
+  const money=v=>new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(v);
+  const number=v=>v===""||v===null||v===undefined?null:Number(v);
+  const scenarios=[
+    ["Simples Nacional","Exige confirmação do anexo da atividade, RBT12 e dados do PGDAS-D."],
+    ["Simples com IBS/CBS no regime regular","Exige confirmar a opção válida e o período, parâmetros e créditos legalmente admissíveis."],
+    ["Lucro Presumido","Exige confirmar elegibilidade e calcular IRPJ, CSLL e demais tributos conforme o período."],
+    ["Lucro Real","Exige apurar resultado contábil e fiscal, ajustes, despesas e créditos admissíveis."]
   ];
-  function showScenarios(){
+  let loadedClient=null,dirty=false,step="dados",saving=false;
+  function selectedClient(){return $("clientSelect").value;}
+  function make(tag,text,className){
+    const el=document.createElement(tag);
+    if(text!==undefined)el.textContent=text;
+    if(className)el.className=className;
+    return el;
+  }
+  function values(){
+    const result={};
+    for(const key of fields)result[key]=form.elements[key].value;
+    return result;
+  }
+  function row(label,status,description){
+    const div=make("div",undefined,"sim-check");
+    div.append(make("strong",label),make("span",status,status==="Informado"||status==="Calculado"?"sim-ok":"sim-pending"),make("p",description));
+    return div;
+  }
+  function progress(data){
+    const required=["regime_confirmado","receita_12m","receita_prevista_2027","estrutura_equipe","prolabore_mensal","folha_12m","atividade_fator_r","despesas_12m"];
+    const complete=required.filter(k=>data[k]!=="" && !["nao_confirmado","nao_informado"].includes(data[k]));
+    const percent=Math.round(complete.length/required.length*100);
+    return {complete:complete.length,total:required.length,percent};
+  }
+  function factor(data){
+    const revenue=number(data.receita_12m),payroll=number(data.folha_12m);
+    if(revenue===null||payroll===null)return null;
+    if(!Number.isFinite(revenue)||revenue<=0||!Number.isFinite(payroll)||payroll<0)return null;
+    // Pela Resolução CGSN 140/2018, no PA posterior ao de abertura, FS12=0/RBT12>0
+    // pode corresponder a 0,01 (1%) para enquadramento. Não tratar automaticamente como 0%.
+    const raw=payroll/revenue;
+    const regulatory=payroll===0?0.01:raw;
+    return {revenue,payroll,raw,regulatory,threshold:regulatory>=0.28};
+  }
+  function factorPreview(){
+    const data=values(),result=factor(data),area=$("factorPreview");
+    if(!result){area.textContent="RBT12 e folha elegível precisam ser informados para calcular o indicador. Pró-labore zero, isoladamente, não comprova folha total zero.";return;}
+    const rate=(result.regulatory*100).toLocaleString("pt-BR",{maximumFractionDigits:2});
+    area.textContent=result.payroll===0?
+      "Folha informada: R$ 0,00. Razão matemática: 0%. Para período de apuração posterior ao início da atividade, a regra de FS12 zero com RBT12 positivo pode resultar em Fator R de 1% para o enquadramento. Confirme o período e a situação com o contador.":
+      "Fator R informativo: "+rate+"%. "+(result.threshold?"Atinge":"Não atinge")+" o patamar de 28%. O anexo depende da atividade e da apuração confirmadas.";
+  }
+  function renderDiagnosis(){
+    const d=values(),box=$("simulationDiagnosis");
+    const list=[];
+    const pr=progress(d),fr=factor(d);
+    list.push(row("Receita de referência",d.receita_12m!==""?"Informado":"Pendente",
+      d.receita_12m!==""?"RBT12 informado: "+money(Number(d.receita_12m))+". Confirmar período e valor no PGDAS-D.":"Informe a receita bruta dos 12 meses anteriores à competência de referência."));
+    list.push(row("Faturamento 2027",d.receita_prevista_2027!==""?"Informado":"Pendente",
+      d.receita_prevista_2027!==""?"Projeção anual: "+money(Number(d.receita_prevista_2027))+". Isto é uma hipótese, não receita realizada.":"Informe uma projeção anual para 2027."));
+    list.push(row("Equipe e pró-labore",(d.estrutura_equipe!=="nao_informado"&&d.prolabore_mensal!=="")?"Informado":"Pendente",
+      d.estrutura_equipe==="so_socios"?"Sem empregados, conforme declarado. Pró-labore mensal: "+(d.prolabore_mensal===""?"não informado":money(Number(d.prolabore_mensal)))+". Confirmar encargos e eventual remuneração contábil.":"Confirme a estrutura da equipe e o pró-labore bruto."));
+    list.push(row("Folha e Fator R",fr?"Calculado":"Pendente",
+      fr?("Folha: "+money(fr.payroll)+"; RBT12: "+money(fr.revenue)+"; indicador para estudo: "+(fr.regulatory*100).toLocaleString("pt-BR",{maximumFractionDigits:2})+"%. "+(fr.payroll===0?"A regra especial de folha zero foi considerada para período posterior à abertura. ":"")+"A elegibilidade ao Anexo III ou V depende da atividade e da apuração."):
+      "Falta confirmar a folha elegível total. Se inexistente, informe zero apenas após confirmação com a contabilidade."));
+    list.push(row("Atividade e regime",(d.atividade_fator_r!=="nao_confirmado"&&d.regime_confirmado!=="nao_confirmado")?"Informado":"Pendente",
+      "Confirme o enquadramento do serviço, CNAE, anexo e opção de IBS/CBS com a contabilidade. O regime da nota de 2026 não determina a opção em 2027."));
+    list.push(row("Despesas e créditos",d.despesas_12m!==""?"Informado":"Pendente",
+      d.despesas_12m!==""?"Despesas declaradas: "+money(Number(d.despesas_12m))+". É necessário classificar sua natureza e elegibilidade.":"Informe o total de despesas, se conhecido, e valide quais seriam dedutíveis ou creditáveis."));
+    box.replaceChildren(...list);
+    const summary=make("p","Você preencheu "+pr.complete+" de "+pr.total+" grupos principais. "+(dirty?"Existem alterações ainda não salvas.":"Verifique os itens pendentes antes de solicitar uma comparação fiscal."),"sim-summary");
+    box.prepend(summary);
+  }
+  function renderResults(){
+    const d=values(),fr=factor(d),box=$("simulationResults");
+    const resultList=[];
+    if(d.receita_12m!==""&&Number.isFinite(Number(d.receita_12m)))resultList.push(row("RBT12 declarado","Calculado",money(Number(d.receita_12m))+" (valor informado, não homologado no PGDAS-D)."));
+    if(d.receita_prevista_2027!==""&&Number.isFinite(Number(d.receita_prevista_2027)))resultList.push(row("Projeção de faturamento para 2027","Calculado",money(Number(d.receita_prevista_2027))+" anual. Média mensal equivalente: "+money(Number(d.receita_prevista_2027)/12)+"."));
+    if(fr)resultList.push(row("Fator R informativo","Calculado",(fr.regulatory*100).toLocaleString("pt-BR",{maximumFractionDigits:2})+"% para análise preliminar, condicionado ao período e à confirmação contábil."));
+    if(fr&&fr.revenue>0)resultList.push(row("Referência de folha para 28%","Calculado",money(fr.revenue*0.28)+" em 12 meses. Não representa recomendação de pró-labore ou necessidade de aumentar despesas."));
+    resultList.push(row("DAS ou impostos de 2027","Pendente","Não calculados. Faltam confirmação de enquadramento, parâmetros oficiais de 2027 e memória de cálculo; não é possível inferir imposto devido apenas pelo RBT12."));
+    resultList.push(row("Economia entre regimes","Pendente","Não determinada. As opções de recolhimento e eventuais prazos devem ser verificados com a contabilidade antes de qualquer decisão."));
+    box.replaceChildren(...resultList);
+    const footer=make("p","Resultado preliminar, exclusivamente informativo. Atualizar as regras oficiais quando a competência de apuração mudar.","sim-summary");
+    box.append(footer);
     cards.replaceChildren(...scenarios.map(([name,description])=>{
-      const item = document.createElement("section");
-      item.className = "scenario-card";
-      const heading = document.createElement("h3");
-      heading.textContent = name;
-      const paragraph = document.createElement("p");
-      paragraph.textContent = description;
-      const status = document.createElement("small");
-      status.textContent = "Sem cálculo: aguardando dados fiscais e motor compatível.";
-      item.append(heading,paragraph,status);
+      const item=make("section",undefined,"scenario-card");
+      item.append(make("h3",name),make("p",description),make("small","Tributos estimados: não calculados. Situação: avaliação pendente."));
       return item;
     }));
   }
-  function factorPreview(){
-    const rawRevenue=form.elements.receita_12m.value;
-    const rawPayroll=form.elements.folha_12m.value;
-    const area=$("factorPreview");
-    if(rawRevenue===""||rawPayroll===""){area.textContent="RBT12 e folha elegível precisam ser informados. Pró-labore zero, isoladamente, não comprova folha total zero.";return;}
-    const revenue=Number(rawRevenue),payroll=Number(rawPayroll);
-    if(!Number.isFinite(revenue)||revenue<=0||!Number.isFinite(payroll)||payroll<0){
-      area.textContent="Para calcular a proporção, informe RBT12 maior que zero e folha elegível não negativa.";
-      return;
-    }
-    const proportion=payroll/revenue*100;
-    const formatted=new Intl.NumberFormat("pt-BR",{maximumFractionDigits:2}).format(proportion);
-    const threshold=proportion>=28?"atinge":"não atinge";
-    area.textContent="Relação informativa folha/RBT12: "+formatted+"%. A proporção "+threshold+" o patamar de 28%. Não confirma enquadramento tributário, nem calcula o DAS.";
+  function renderProgress(){
+    const p=progress(values());
+    $("simulationProgress").textContent="Dados principais: "+p.complete+"/"+p.total+" informados ("+p.percent+"%). "+(dirty?"Alterações não salvas.":"Preencha os dados pendentes; os resultados existentes são informativos.");
   }
-  form.elements.receita_12m.addEventListener("input",factorPreview);
-  form.elements.folha_12m.addEventListener("input",factorPreview);
-  function selectedClient(){return $("clientSelect").value;}
+  function showStep(next){
+    if(!["dados","diagnostico","resultados"].includes(next))return;
+    step=next;
+    for(const el of document.querySelectorAll("[data-sim-panel]"))el.hidden=el.dataset.simPanel!==step;
+    for(const el of document.querySelectorAll("[data-simstep]"))el.classList.toggle("active",el.dataset.simstep===step);
+    renderProgress();renderDiagnosis();renderResults();factorPreview();
+    $("simulationRoadmap").scrollIntoView({behavior:"smooth",block:"start"});
+  }
   async function load(){
-    if(!selectedClient()){
-      form.reset();
-      factorPreview();
-      info.textContent = "Selecione um cliente ativo no cabeçalho antes de preencher a simulação.";
+    const client=selectedClient();
+    if(!client){
+      form.reset();form.elements.competencia_referencia.value="2027-01";
+      loadedClient=null;dirty=false;
+      info.textContent="Selecione um cliente no cabeçalho antes de preencher o estudo.";
       for(const control of form.elements)control.disabled=true;
-      return;
+      renderProgress();renderDiagnosis();renderResults();factorPreview();return;
     }
     for(const control of form.elements)control.disabled=false;
-    info.textContent="Carregando informações deste cliente...";
+    info.textContent="Carregando informações da empresa...";
     try{
-      const response=await fetch("/api/simulacoes/perfil?cliente="+encodeURIComponent(selectedClient()),{cache:"no-store"});
-      if(!response.ok)throw Error("Erro ao consultar os dados da empresa.");
-      const result=await response.json();
-      // Impede que uma resposta atrasada de outra empresa sobrescreva os campos.
-      if(result.cliente!==selectedClient())return;
+      const response=await fetch("/api/simulacoes/perfil?cliente="+encodeURIComponent(client),{cache:"no-store"});
+      if(!response.ok)throw Error("Não foi possível consultar o perfil tributário.");
+      const json=await response.json();
+      if(client!==selectedClient())return;
       form.reset();
-      if(result.dados){
-        for(const key of fields)form.elements[key].value=result.dados[key]??(key==="regime_confirmado"?"nao_confirmado":key==="estrutura_equipe"?"nao_informado":"");
-      }
-      factorPreview();
-      info.textContent=result.dados?"Dados locais carregados. Nenhum imposto foi calculado.":"Nenhuma informação financeira cadastrada para este cliente.";
-    }catch(e){info.textContent="Não foi possível consultar os dados: "+e.message;}
+      for(const [key,value] of Object.entries(defaults))form.elements[key].value=value;
+      if(json.dados)for(const key of fields)if(json.dados[key]!==null&&json.dados[key]!==undefined)form.elements[key].value=json.dados[key];
+      loadedClient=client;dirty=false;
+      info.textContent=json.dados?"Dados salvos anteriormente carregados.":"Nenhum dado financeiro salvo para este cliente. Preencha os itens disponíveis e salve.";
+      renderProgress();renderDiagnosis();renderResults();factorPreview();
+    }catch(e){info.textContent="Falha ao carregar: "+e.message;}
   }
+  form.addEventListener("input",()=>{dirty=true;renderProgress();renderDiagnosis();renderResults();factorPreview();});
+  form.addEventListener("change",()=>{dirty=true;renderProgress();renderDiagnosis();renderResults();factorPreview();});
   form.addEventListener("submit",async e=>{
     e.preventDefault();
-    const clientId=selectedClient();
-    if(!clientId){info.textContent="Selecione um cliente.";return;}
-    const payload={cliente_id:clientId};
-    for(const key of fields)payload[key]=form.elements[key].value;
-    $("simulationSave").disabled=true;
+    const client=selectedClient();
+    if(!client){info.textContent="Selecione um cliente.";return;}
+    if(saving)return;
+    saving=true;$("simulationSave").disabled=true;
+    const data=values();
     try{
-      const response=await fetch("/api/simulacoes/perfil",{
-        method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)
-      });
-      const data=await response.json();
-      if(!response.ok)throw Error(data.error||"Falha ao salvar.");
-      info.textContent=data.aviso;
-    }catch(error){info.textContent="Não foi possível salvar: "+error.message;}
-    finally{$("simulationSave").disabled=false;}
+      const response=await fetch("/api/simulacoes/perfil",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({cliente_id:client,...data})});
+      const result=await response.json();
+      if(!response.ok)throw Error(result.error||"Erro ao salvar");
+      if(client!==selectedClient())return;
+      dirty=false;
+      info.textContent="Dados salvos no banco local deste cliente. "+result.aviso;
+      renderProgress();renderDiagnosis();renderResults();
+      showStep("diagnostico");
+    }catch(e){info.textContent="Falha ao salvar: "+e.message;}
+    finally{saving=false;$("simulationSave").disabled=false;}
   });
+  for(const button of document.querySelectorAll("[data-simstep]"))button.onclick=()=>showStep(button.dataset.simstep);
+  for(const button of document.querySelectorAll("[data-sim-next]"))button.onclick=()=>showStep(button.dataset.simNext);
   $("simulationReload").onclick=load;
-  $("clientSelect").addEventListener("change",load);
-  showScenarios();
-  factorPreview();
+  $("clientSelect").addEventListener("change",()=>{showStep("dados");load();});
   load();
 })();
