@@ -178,12 +178,19 @@
     const summary=make("p",reason);
     const caution=make("p",context,"interpretation-caution");
     const next=make("p","Próxima verificação: "+action,"interpretation-action");
+    const numericExample=window.CFiscalPreliminary?.calculate(data.receita_prevista_2027,data.receita_12m);
+    let selectedExample=null;
+    if(data.regime_confirmado==="simples"&&data.atividade_fator_r==="sim"&&fr&&numericExample){
+      const annex=fr.threshold?"III":"V";
+      const sample=numericExample.scenarios[annex];
+      selectedExample=make("p","Exemplo condicionado para Anexo "+annex+": "+money(sample.monthly)+" mensais e "+money(sample.annual)+" anuais, considerando apenas a primeira faixa e a receita projetada. "+(numericExample.bracketAssumed?"A primeira faixa é uma hipótese não comprovada pelo RBT12 informado. ":"")+"Não representa o DAS efetivo, nem considera todos os efeitos da Reforma Tributária.","interpretation-example");
+    }
     const flags=make("div",undefined,"interpretation-flags");
     flags.append(make("span","Classificação: "+(data.atividade_fator_r==="nao_confirmado"?"não confirmada":data.atividade_fator_r==="sim"?"Fator R informado como aplicável":"Fator R informado como não aplicável")),
       make("span","Folha elegível: "+(data.folha_12m===""?"não informada":money(Number(data.folha_12m)))),
       make("span","RBT12: "+(revenue===null?"não informado":money(revenue))));
     if(projected===null)flags.append(make("span","Projeção anual: pendente"));
-    box.replaceChildren(title,flags,summary,caution,next);
+    box.replaceChildren(title,flags,summary,caution,...(selectedExample?[selectedExample]:[]),next);
   }
   function renderResults(){
     const d=values(),fr=factor(d),box=$("simulationResults"),windowPeriod=referenceWindow(d.competencia_referencia);
