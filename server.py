@@ -6,6 +6,7 @@ import sys
 import webbrowser
 from datetime import datetime, timezone
 from functools import partial
+from contextlib import closing
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from threading import Timer
@@ -23,7 +24,7 @@ def now():
 
 def init():
     DB.parent.mkdir(parents=True, exist_ok=True)
-    with sqlite3.connect(DB) as db:
+    with closing(sqlite3.connect(DB)) as db, db:
         db.executescript("""
         CREATE TABLE IF NOT EXISTS notes (id TEXT PRIMARY KEY, xml TEXT, data TEXT, created TEXT);
         CREATE TABLE IF NOT EXISTS events (note TEXT, kind TEXT, data TEXT, created TEXT);
@@ -89,7 +90,7 @@ class Handler(SimpleHTTPRequestHandler):
         if path == "/api/exemplos":
             return self.send_data([{"name":p.name,"xml":p.read_text(encoding="utf8")} for p in sorted((ROOT/"exemplos").glob("*.xml"))])
         if path == "/api/notas":
-            with sqlite3.connect(DB) as db:
+            with closing(sqlite3.connect(DB)) as db, db:
                 notes = {i:dict(json.loads(data), created=t, events=[]) for i,data,t in db.execute("SELECT id,data,created FROM notes ORDER BY rowid DESC")}
                 for i,kind,data,t in db.execute("SELECT note,kind,data,created FROM events ORDER BY rowid"):
                     notes[i]["events"].append(dict(kind=kind, data=json.loads(data), date=t))
@@ -106,7 +107,7 @@ class Handler(SimpleHTTPRequestHandler):
             if not 0 < size <= 8*1024*1024:
                 raise ValueError("Tamanho inválido.")
             body = json.loads(self.rfile.read(size))
-            with sqlite3.connect(DB, timeout=15) as db:
+            with closing(sqlite3.connect(DB, timeout=15)) as db, db:
                 if self.path == "/api/importar":
                     xml = body["xml"]
                     data = parse(xml)
