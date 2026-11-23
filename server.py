@@ -169,6 +169,11 @@ class Handler(SimpleHTTPRequestHandler):
                     for cid,name,cnpj in company_rows:
                         records = db.execute("SELECT n.id,n.data,n.created FROM notes n JOIN note_clients nc ON nc.note_id=n.id WHERE nc.client_id=? ORDER BY n.rowid DESC",(cid,)).fetchall()
                         items = [dict(json.loads(data),events=[]) for _,data,_ in records]
+                        by_id = {i:item for (i,_,_),item in zip(records,items)}
+                        if by_id:
+                            for note_id,kind,event_data,event_time in db.execute("SELECT e.note,e.kind,e.data,e.created FROM events e JOIN note_clients nc ON nc.note_id=e.note WHERE nc.client_id=? ORDER BY e.rowid",(cid,)):
+                                if note_id in by_id:
+                                    by_id[note_id]["events"].append(dict(kind=kind,data=json.loads(event_data),date=event_time))
                         if competencia:
                             items=[n for n in items if n.get("date","").startswith(competencia)]
                         clients_dashboard.append(dict(id=cid,nome=name,cnpj=cnpj,**dashboard_for(items)))
