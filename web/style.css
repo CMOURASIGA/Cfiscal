@@ -20,3 +20,10 @@ nav a[aria-current]{box-shadow:inset 3px 0 var(--consult-accent)}.cs-tabs{--cs-p
 .dashboard-clients{overflow:auto}.dashboard-disclaimer{font-size:12px;line-height:1.6;border-top:1px solid #e2e8ef;margin-top:16px;padding-top:12px;color:#546b81}
 @media(max-width:1150px){.dashboard-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:650px){.dashboard{padding:14px}.dashboard-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.role-picker{width:100%}.role-picker button{flex:1}.dashboard-tools{flex-wrap:wrap}}
+
+.diagnosis-box{border:1px solid #bcd1e1;background:#f5f9fc;border-left:4px solid #1470a7;border-radius:9px;padding:16px;margin:0 0 18px}
+.diagnosis-box h3{margin:0 0 8px}.diagnosis-box h3:not(:first-child){margin-top:16px}.diagnosis-box>strong{display:block;font-size:16px;margin-bottom:7px;color:#203b56}
+.diagnosis-box p{line-height:1.6}.diagnosis-box dl{font-size:13px;margin:16px 0}.diagnosis-box dt{font-weight:600}.diagnosis-box dd{padding-bottom:6px}
+.diagnosis-atencao{border-left-color:#d58e22;background:#fff9ed}.diagnosis-revisao{border-left-color:#8c6bb0;background:#faf8ff}
+.diagnosis-sources{display:grid;gap:7px;font-size:13px;margin-top:15px;border-top:1px solid #d8e4ed;padding-top:10px}
+.diagnosis-sources a{color:#075c91;overflow-wrap:anywhere}
