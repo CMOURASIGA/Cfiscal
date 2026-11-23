@@ -7,7 +7,7 @@ Aplicação local do CFiscal para conferir notas fiscais de serviços e organiza
 1. Extraia **toda** a pasta do ZIP em um diretório gravável, como `C:\Projetos\CFiscal`.
 2. Com Python 3.10 ou superior instalado, abra **Iniciar-CFiscal.cmd**. Alternativa no PowerShell, a partir da pasta extraída: `py -3 server.py --abrir`.
 3. Abra **http://127.0.0.1:8765**. A janela do terminal deve ficar aberta durante o uso.
-4. Clique em **Carregar exemplos**. Para simular o recebimento do cliente, use **Importar XMLs** e selecione os arquivos 301, 302 e 303 da pasta **importar**. A aplicação identifica repetições.
+4. Clique em **Carregar exemplos**. Para simular o recebimento do cliente, use **Importar XMLs** e selecione os arquivos 301, 302, 303 e 304 da pasta **importar**. Eles não são carregados pelo botão **Carregar exemplos**, que usa somente a pasta **exemplos**. A aplicação identifica repetições.
 
 No macOS ou Linux, execute `python3 server.py --abrir`. Não há instalação de pacotes Python nem dependência de Docker. A pasta dados é criada na primeira execução. Para usar outra porta no PowerShell, defina `$env:CFISCAL_PORT="8766"` antes de iniciar.
 
@@ -19,7 +19,8 @@ No macOS ou Linux, execute `python3 server.py --abrir`. Não há instalação de
 | Abrir 101 | IBS declarado R$ 0,48, estadual R$ 0,24 e municipal R$ 0,24. Diferença R$ 0,00 |
 | Abrir 102 | IBS declarado R$ 1,48. Soma R$ 0,48. Diferença positiva de R$ 1,00 |
 | Abrir 201 | Dados insuficientes. A tela identifica a ausência de vIBSMun. O campo ausente não vira zero |
-| Após carregar exemplos, importar a pasta importar | Entram mais 3 notas. O recibo permite abrir cada nota. Repetir informa 3 já na fila e preserva o histórico |
+| Após carregar exemplos, importar a pasta importar | Entram mais 4 notas (301 a 304). O recibo permite abrir cada nota. Repetir informa 4 já na fila e preserva o histórico |
+| Abrir 304 após importar | Terceira empresa fictícia, competência abril/2027, valor de serviço R$ 2.500,00, IBS declarado R$ 1,20, UF R$ 0,60, município R$ 0,60. Resultado: valores coincidentes |
 | Filtrar pela Escola Horizonte e março de 2027 | Notas 101 e 102. Exportar CSV inclui essas duas linhas |
 | Registrar revisão da 102 | Informe responsável, comentário e situação. Feche o programa e abra novamente. O histórico continua disponível e a diferença permanece visível |
 | Importar o mesmo lote outra vez | Três duplicadas, quantidade de notas inalterada. Alterar o valor mantendo o identificador gera conflito explícito |
