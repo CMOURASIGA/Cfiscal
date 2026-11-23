@@ -27,3 +27,48 @@ nav a[aria-current]{box-shadow:inset 3px 0 var(--consult-accent)}.cs-tabs{--cs-p
 .diagnosis-atencao{border-left-color:#d58e22;background:#fff9ed}.diagnosis-revisao{border-left-color:#8c6bb0;background:#faf8ff}
 .diagnosis-sources{display:grid;gap:7px;font-size:13px;margin-top:15px;border-top:1px solid #d8e4ed;padding-top:10px}
 .diagnosis-sources a{color:#075c91;overflow-wrap:anywhere}
+
+/* Navegação de produto: telas independentes e sidebar adaptativa (UX-NAV-01) */
+.app-view[hidden]{display:none!important}
+.app-sidebar{width:228px;transition:width .2s ease;padding:24px 14px}
+.app-sidebar .brand{display:flex;align-items:center;gap:10px;white-space:nowrap;padding:2px 6px}
+.brand-name{font-size:24px}.app-sidebar .brand img{width:35px}
+#sidebarToggle{margin-left:auto;background:rgba(255,255,255,.10);color:white;border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:7px 10px;line-height:1}
+.app-sidebar nav{margin-top:34px;display:grid;gap:7px}.app-sidebar nav a{display:flex;align-items:center;gap:12px;border-radius:10px;padding:12px 10px;font-weight:550}
+.nav-icon{font-size:20px;line-height:1;width:22px;text-align:center;flex-shrink:0}.nav-label{white-space:nowrap}
+.app-sidebar .sidebar-foot{margin:auto 10px 4px;font-size:11px}
+body:not(.sidebar-collapsed) #appMain{margin-left:228px}
+.sidebar-collapsed .app-sidebar{width:72px;padding:24px 9px}
+.sidebar-collapsed .brand{justify-content:center;padding:0}.sidebar-collapsed .brand-name,.sidebar-collapsed .nav-label,.sidebar-collapsed .sidebar-foot{display:none}
+.sidebar-collapsed .app-sidebar .brand img{display:none}
+.sidebar-collapsed #sidebarToggle{margin:0 auto}
+.sidebar-collapsed .app-sidebar nav a{justify-content:center;padding:12px 6px}
+.sidebar-collapsed #appMain{margin-left:72px}
+.workspace-header{padding:14px 0;gap:18px;min-height:77px}
+.workspace-heading{display:grid;gap:3px}.workspace-heading b{font-size:12px}
+.workspace-client{width:min(440px,48%);display:grid;gap:4px;font-size:12px}
+.workspace-client select{padding:9px;border-radius:8px}
+.page-heading{padding:28px 0 12px}.page-heading p{margin-top:4px}
+.app-view > .sheet{margin-top:10px}
+#view-notas > .title{padding:24px 0 12px}
+#view-notas > .metrics{margin-top:18px}
+#view-painel .dashboard{margin-top:12px}
+#view-clientes .client-form{max-width:950px}
+@media(max-width:930px){
+  .app-sidebar{position:sticky;top:0;inset:auto;width:100%;flex-direction:row;padding:10px 14px;z-index:10}
+  .app-sidebar nav{margin:0;display:flex;gap:4px;flex-wrap:wrap}
+  .app-sidebar nav a{padding:8px}.sidebar-collapsed .app-sidebar{width:100%;padding:10px 14px}
+  .sidebar-collapsed .app-sidebar .brand img{display:block}
+  .sidebar-collapsed .app-sidebar nav a{padding:8px}
+  .sidebar-collapsed .nav-label{display:inline}
+  .sidebar-collapsed #appMain,body:not(.sidebar-collapsed) #appMain{margin-left:0}
+  .workspace-header{flex-wrap:wrap}.workspace-client{width:min(460px,100%)}
+}
+@media(max-width:600px){
+  .app-sidebar{align-items:flex-start;flex-direction:column;gap:8px}
+  .app-sidebar nav{width:100%;display:flex;flex-wrap:wrap}
+  .app-sidebar nav a{font-size:12px;padding:7px}
+  .nav-icon{font-size:15px;width:15px}
+  .sidebar-collapsed .app-sidebar nav a .nav-label{display:inline}
+  .page-heading{padding:16px 0 10px}
+}
