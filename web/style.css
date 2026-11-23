@@ -110,3 +110,19 @@ body:not(.sidebar-collapsed) #appMain{margin-left:228px}
 .simulation-warning[hidden]{display:none!important}
 .sim-reference-button{padding:10px 14px;border:1px solid #3674aa;background:#fff;color:#064573;border-radius:8px;margin-top:8px}
 .sim-reference-button:disabled{opacity:.45;cursor:not-allowed}
+
+/* Exemplos nominais claramente separados do cálculo fiscal oficial */
+.preliminary-examples{border:1px solid #b8d5e9;background:#f6fafc;border-radius:12px;padding:18px;margin:16px 0 22px}
+.preliminary-head h3{font-size:17px;margin:0 0 8px;color:#133957}
+.preliminary-head p{font-size:13px;margin:0 0 12px}
+.preliminary-caution{padding:12px;background:#fff5e8;border-left:3px solid #d59535;border-radius:6px;font-size:13px;line-height:1.5}
+.preliminary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:14px 0}
+.preliminary-card{border:1px solid #d5e2ec;background:white;border-radius:10px;padding:16px}
+.preliminary-card h4{font-size:13px;margin:0 0 12px}
+.preliminary-card strong{font-size:25px;color:#003b73;display:block}
+.preliminary-card p{margin:4px 0 10px;font-weight:600}
+.preliminary-card small{display:block;font-size:12px;color:#536b7f;line-height:1.6}
+.preliminary-difference{font-size:13px;font-weight:600;margin:12px 0}
+.preliminary-limit{font-size:12px;color:#516a7e;line-height:1.5;margin:12px 0 0}
+.preliminary-empty{padding:12px}.preliminary-empty p{font-size:13px;margin-top:8px}
+@media(max-width:690px){.preliminary-grid{grid-template-columns:1fr}}
