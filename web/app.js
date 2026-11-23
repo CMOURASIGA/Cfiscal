@@ -168,7 +168,21 @@ $("print").onclick=()=>window.print();
 $("close").onclick=()=>$("drawer").close();
 $("import").onclick=()=>$("files").click();
 $("files").onchange=async e=>{await batch(Array.from(e.target.files));e.target.value="";};
-$("demo").onclick=async()=>{try{await batch(await api("exemplos"));}catch(e){message(e.message);}};
+$("demo").onclick=async()=>{
+  const client=clients.find(c=>c.id===$("clientSelect").value);
+  if(!client){message("Cadastre e selecione a empresa emitente antes de carregar exemplos.");return;}
+  try{
+    const examples=await api("exemplos");
+    const matching=examples.filter(f=>{
+      const doc=new DOMParser().parseFromString(f.xml,"application/xml");
+      const emit=doc.getElementsByTagNameNS("http://www.sped.fazenda.gov.br/nfse","emit")[0];
+      const cnpj=emit?.getElementsByTagNameNS("http://www.sped.fazenda.gov.br/nfse","CNPJ")[0]?.textContent;
+      return cnpj===client.cnpj;
+    });
+    if(!matching.length){message("Não existem exemplos para este CNPJ. Use Importar XMLs em lote.");return;}
+    await batch(matching);
+  }catch(e){message(e.message);}
+};
 $("export").onclick=()=>{
   const rows=[["Nota","Empresa","CNPJ","Competência","IBS declarado","Resultado","Revisão"],...filtered().map(n=>[n.number,n.company,n.cnpj,n.date,n.ibs,n.status,workflow(n)])];
   const cell=s=>'"'+String(s).replace(/^[\s]*[=+@-]/,"'$&").replaceAll('"','""')+'"';
