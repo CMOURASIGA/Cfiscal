@@ -234,6 +234,11 @@ class Conferencia(unittest.TestCase):
         js=self.call("/simulation.js").decode()
         self.assertIn("renderDiagnosis",js)
         self.assertIn("renderResults",js)
+        self.assertIn("referenceWindow",js)
+        self.assertIn("simulationWarnings",html)
+        self.assertIn("simulationExample",html)
+        self.assertIn("warnings()",js)
+        self.assertIn("m-14",js)
         self.assertIn('payroll===0?0.01:raw',js)
 
     def test_web(self):
