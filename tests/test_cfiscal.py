@@ -199,12 +199,15 @@ class Conferencia(unittest.TestCase):
         second=self.register((server.ROOT/"exemplos/201.xml").read_text(encoding="utf8"))
         self.assertIsNone(self.call("/api/simulacoes/perfil?cliente="+first)["dados"])
         payload={"cliente_id":first,"regime_confirmado":"simples","receita_12m":"156000.00",
-                 "receita_prevista_2027":"170000.00","folha_12m":"0","despesas_12m":"30000.00"}
+                 "receita_prevista_2027":"170000.00","folha_12m":"0","despesas_12m":"30000.00",
+                 "prolabore_mensal":"0","estrutura_equipe":"so_socios"}
         result=self.call("/api/simulacoes/perfil",payload)
         self.assertTrue(result["ok"])
         self.assertIn("Nenhum imposto",result["aviso"])
         self.assertIsNone(self.call("/api/simulacoes/perfil?cliente="+second)["dados"])
         self.assertEqual(self.call("/api/simulacoes/perfil?cliente="+first)["dados"]["receita_12m"],"156000.00")
+        self.assertEqual(self.call("/api/simulacoes/perfil?cliente="+first)["dados"]["prolabore_mensal"],"0")
+        self.assertEqual(self.call("/api/simulacoes/perfil?cliente="+first)["dados"]["estrutura_equipe"],"so_socios")
         server.init()
         self.assertEqual(self.call("/api/simulacoes/perfil?cliente="+first)["dados"]["regime_confirmado"],"simples")
         with self.assertRaises(error.HTTPError):
@@ -213,6 +216,8 @@ class Conferencia(unittest.TestCase):
             self.call("/api/simulacoes/perfil",dict(payload,receita_12m="abc"))
         with self.assertRaises(error.HTTPError):
             self.call("/api/simulacoes/perfil",dict(payload,cliente_id="inexistente"))
+        with self.assertRaises(error.HTTPError):
+            self.call("/api/simulacoes/perfil",dict(payload,prolabore_mensal="-1"))
     def test_web(self):
         self.assertIn(b"CFiscal",self.call("/"))
         self.assertEqual(self.call("/api/notas"),[])
