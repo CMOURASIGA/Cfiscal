@@ -7,7 +7,8 @@ Aplicação local do CFiscal para conferir notas fiscais de serviços e organiza
 1. Extraia **toda** a pasta do ZIP em um diretório gravável, como `C:\Projetos\CFiscal`.
 2. Com Python 3.10 ou superior instalado, abra **Iniciar-CFiscal.cmd**. Alternativa no PowerShell, a partir da pasta extraída: `py -3 server.py --abrir`.
 3. Abra **http://127.0.0.1:8765**. A janela do terminal deve ficar aberta durante o uso.
-4. Clique em **Carregar exemplos**. Para simular o recebimento do cliente, use **Importar XMLs** e selecione os arquivos 301, 302, 303 e 304 da pasta **importar**. Eles não são carregados pelo botão **Carregar exemplos**, que usa somente a pasta **exemplos**. A aplicação identifica repetições.
+4. Primeiro cadastre o cliente emitente em **Clientes**, informando nome e CNPJ. Selecione o cliente. Em **Importar XMLs em lote**, é possível escolher vários arquivos XML de uma vez. Cada arquivo é aceito somente se o CNPJ do emitente coincidir com o cliente selecionado. Para demonstrar com vários emitentes, cadastre cada empresa fictícia e importe seus arquivos no respectivo contexto.
+5. Clique em **Carregar exemplos**. Para simular o recebimento do cliente, use **Importar XMLs** e selecione os arquivos 301, 302, 303 e 304 da pasta **importar**. Eles não são carregados pelo botão **Carregar exemplos**, que usa somente a pasta **exemplos**. A aplicação identifica repetições.
 
 No macOS ou Linux, execute `python3 server.py --abrir`. Não há instalação de pacotes Python nem dependência de Docker. A pasta dados é criada na primeira execução. Para usar outra porta no PowerShell, defina `$env:CFISCAL_PORT="8766"` antes de iniciar.
 
@@ -31,7 +32,7 @@ Os XMLs usam o namespace nacional e um subconjunto dos campos. São fictícios, 
 
 ## O que fica registrado
 
-O servidor atende somente em loopback. A base local contém XML original, resultado por nota, revisões e entradas e respostas dos motores acionados com sucesso. Acesso ao arquivo e backup são de responsabilidade do operador local. Com o programa fechado, copie dados/cfiscal.db para guardar uma cópia. Use os XMLs sintéticos ao compartilhar o projeto. Os filtros por empresa organizam a fila de um operador. O controle de acesso por empresa pertence à próxima etapa do SaaS.
+O piloto é monousuário local: os dados estão em SQLite no próprio computador e não existe autenticação. A separação por cliente impede associação incorreta e filtra as notas, mas **não constitui isolamento de segurança entre usuários**. XMLs e registros fiscais não são guardados no localStorage. Notas anteriores sem vínculo aparecem na fila de organização, com vinculação manual condicionada a CNPJ igual. Para uma implantação com usuários externos será obrigatória autenticação e autorização no backend.\n\nO servidor atende somente em loopback. A base local contém XML original, resultado por nota, revisões e entradas e respostas dos motores acionados com sucesso. Acesso ao arquivo e backup são de responsabilidade do operador local. Com o programa fechado, copie dados/cfiscal.db para guardar uma cópia. Use os XMLs sintéticos ao compartilhar o projeto. Os filtros por empresa organizam a fila de um operador. O controle de acesso por empresa pertence à próxima etapa do SaaS.
 
 ## Estrutura
 
@@ -49,4 +50,4 @@ O servidor atende somente em loopback. A base local contém XML original, result
 
 Execute `py -3 -m unittest discover -s tests -v` no Windows ou `python3 -m unittest discover -s tests -v` no Linux/macOS.
 
-Ajuda fiscal está disponível no menu principal e pode ser consultada offline. Ao atualizar, encerre o CFiscal e copie a pasta dados da instalação anterior para a nova pasta do programa antes de iniciar.
+Ajuda fiscal está disponível no menu principal e pode ser consultada offline. Ao atualizar via Git na mesma pasta, não remova a pasta dados. Para mudar de pasta, encerre o CFiscal e copie a pasta dados para a nova instalação antes de iniciar.
