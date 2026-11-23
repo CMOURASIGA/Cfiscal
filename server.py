@@ -14,7 +14,7 @@ from pathlib import Path
 from threading import Timer
 from urllib import request, error
 from urllib.parse import urlsplit, parse_qs
-from fiscal import parse, cents
+from fiscal import parse, cents, contextual_diagnosis
 
 ROOT = Path(__file__).resolve().parent
 DB = Path(os.environ.get("CFISCAL_DB", ROOT / "dados" / "cfiscal.db"))
@@ -79,8 +79,13 @@ def dashboard_for(notes):
     declared_ibs = Decimal("0")
     cbs_known = ibs_known = 0
     pending_review = 0
+    contextual_compatible = 0
+    contextual_review = 0
     monthly = {}
     for note in notes:
+        diagnostic = note.get("diagnostico") or contextual_diagnosis(note)
+        contextual_compatible += int(diagnostic["nivel"] == "informativo" and diagnostic["titulo"].startswith("Ausência"))
+        contextual_review += int(diagnostic["nivel"] == "revisao")
         status = note.get("status")
         if status in counts:
             counts[status] += 1
@@ -115,6 +120,8 @@ def dashboard_for(notes):
         "divergencias":counts["Divergência"],
         "dados_insuficientes":counts["Dados insuficientes"],
         "revisoes_pendentes":pending_review,
+        "ausencias_compativeis_2026":contextual_compatible,
+        "diagnosticos_a_revisar":contextual_review,
         "valor_servicos_informado":str(gross),
         "valor_servicos_com_valor":gross_known,
         "cbs_declarada":str(declared_cbs) if cbs_known else None,
@@ -169,6 +176,7 @@ class Handler(SimpleHTTPRequestHandler):
                     for cid,name,cnpj in company_rows:
                         records = db.execute("SELECT n.id,n.data,n.created FROM notes n JOIN note_clients nc ON nc.note_id=n.id WHERE nc.client_id=? ORDER BY n.rowid DESC",(cid,)).fetchall()
                         items = [dict(json.loads(data),events=[]) for _,data,_ in records]
+                        for item in items: item["diagnostico"]=contextual_diagnosis(item)
                         by_id = {i:item for (i,_,_),item in zip(records,items)}
                         if by_id:
                             for note_id,kind,event_data,event_time in db.execute("SELECT e.note,e.kind,e.data,e.created FROM events e JOIN note_clients nc ON nc.note_id=e.note WHERE nc.client_id=? ORDER BY e.rowid",(cid,)):
@@ -185,6 +193,7 @@ class Handler(SimpleHTTPRequestHandler):
                 else:
                     records = []
                 notes = {i:dict(json.loads(data),created=t,events=[],client_id=client_id if client_id!="pendentes" else None) for i,data,t in records}
+                for item in notes.values(): item["diagnostico"]=contextual_diagnosis(item)
                 for i,kind,data,t in db.execute("SELECT note,kind,data,created FROM events ORDER BY rowid"):
                     if i in notes:
                         notes[i]["events"].append(dict(kind=kind,data=json.loads(data),date=t))
