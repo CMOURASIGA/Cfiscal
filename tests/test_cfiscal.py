@@ -187,7 +187,7 @@ class Conferencia(unittest.TestCase):
             self.assertIn('data-nav="'+view+'"',html)
         self.assertIn('id="sidebarToggle"',html)
         self.assertIn('src="navigation.js"',html)
-        self.assertIn('data-view="painel" hidden',html)
+        self.assertIn('id="view-painel" hidden',html)
         ajuda=self.call("/ajuda.html").decode()
         self.assertIn('data-nav="ajuda"',ajuda)
         self.assertIn('id="sidebarToggle"',ajuda)
