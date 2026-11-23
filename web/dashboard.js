@@ -20,6 +20,8 @@
     if(filter){
       card.onclick=()=>{
         byId("status").value=filter==="any"?"":filter;
+        byId("month").value=byId("dashboardMonth").value;
+        window.CFiscalNavigate?.("notas");
         byId("status").dispatchEvent(new Event("change"));
         byId("rows").scrollIntoView({behavior:"smooth",block:"start"});
       };
@@ -82,7 +84,7 @@
       button.onclick=()=>{
         byId("clientSelect").value=c.id;
         byId("clientSelect").dispatchEvent(new Event("change"));
-        byId("clientes").scrollIntoView({behavior:"smooth",block:"start"});
+        window.CFiscalNavigate?.("notas");
       };
       cell.append(button);tr.append(cell);table.append(tr);
     }
@@ -125,7 +127,6 @@
   byId("dashboardMonth").onchange=refreshDashboard;
   byId("dashboardRefresh").onclick=refreshDashboard;
   byId("clientSelect").addEventListener("change",()=>{if(role==="empresario")refreshDashboard();});
-  const originalRefresh=window.fetch;
   // Após importações e revisões, atualiza os indicadores quando a lista recarrega.
   const observer=new MutationObserver(()=>{if(role==="empresario")refreshDashboard();});
   observer.observe(byId("rows"),{childList:true});
