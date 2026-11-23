@@ -1,4 +1,5 @@
 import functools
+from contextlib import closing
 import json
 import tempfile
 import threading
@@ -128,7 +129,7 @@ class Conferencia(unittest.TestCase):
         with self.assertRaises(error.HTTPError):
             self.call("/api/revisar",{"id":parse(self.xml)["id"],"cliente_id":other_id,"situacao":"Concluída","responsavel":"A","comentario":"B"})
     def test_legacy_association(self):
-        with __import__("sqlite3").connect(server.DB) as db:
+        with closing(__import__("sqlite3").connect(server.DB)) as db, db:
             data=parse(self.xml)
             db.execute("INSERT INTO notes VALUES (?,?,?,?)",(data["id"],self.xml,json.dumps(data),server.now()))
         self.assertEqual(len(self.call("/api/notas?cliente=pendentes")),1)
