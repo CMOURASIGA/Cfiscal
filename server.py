@@ -247,7 +247,14 @@ class Handler(SimpleHTTPRequestHandler):
                     equipe=str(body.get("estrutura_equipe","nao_informado"))
                     if equipe not in ("nao_informado","so_socios","com_funcionarios"):
                         raise ValueError("Estrutura da equipe inválida.")
-                    values.update(regime_confirmado=regime,estrutura_equipe=equipe,exercicio=2027)
+                    atividade=str(body.get("atividade_fator_r","nao_confirmado"))
+                    if atividade not in ("nao_confirmado","sim","nao"):
+                        raise ValueError("Aplicabilidade do Fator R inválida.")
+                    competencia=str(body.get("competencia_referencia","2027-01"))
+                    if not re.fullmatch(r"202[67]-(0[1-9]|1[0-2])",competencia):
+                        raise ValueError("Competência de referência deve ser um mês de 2026 ou 2027.")
+                    values.update(regime_confirmado=regime,estrutura_equipe=equipe,
+                                  atividade_fator_r=atividade,competencia_referencia=competencia,exercicio=2027)
                     db.execute("INSERT INTO simulation_profiles(client_id,data,updated) VALUES(?,?,?) ON CONFLICT(client_id) DO UPDATE SET data=excluded.data,updated=excluded.updated",
                                (client_id,json.dumps(values),now()))
                     result={"ok":True,"dados":values,"aviso":"Dados salvos localmente. Nenhum imposto foi calculado e nenhuma mudança de regime foi recomendada."}
