@@ -1,6 +1,6 @@
 # CFiscal
 
-Aplicação local da Consult Services para conferir notas fiscais de serviços e organizar sua revisão. Esta entrega cobre o posto de trabalho de um analista, com várias empresas e persistência em SQLite.
+Aplicação local do CFiscal para conferir notas fiscais de serviços e organizar sua revisão, independentemente da empresa emitente. Esta entrega cobre o posto de trabalho de um analista, com várias empresas e persistência em SQLite.
 
 ## Começar no Windows
 
