@@ -138,9 +138,57 @@
     const limits=make("p","Este exemplo não contempla enquadramento fiscal efetivo, fator R confirmado, IBS/CBS em opção separada, IRPJ/CSLL de outros regimes, custos adicionais, créditos ou mudanças da receita ao longo dos meses.","preliminary-limit");
     box.replaceChildren(header,summary,cards,diff,source,limits);
   }
+  function renderInterpretation(data){
+    const box=$("scenarioInterpretation");
+    const fr=factor(data);
+    const projected=number(data.receita_prevista_2027);
+    const revenue=number(data.receita_12m);
+    const team=data.estrutura_equipe==="so_socios"&&number(data.prolabore_mensal)===0;
+    let heading,reason,context,action;
+    if(data.regime_confirmado!=="simples"){
+      heading="Primeiro, confirme se a comparação pelo Simples Nacional faz sentido";
+      reason="O regime informado para o estudo não é Simples Nacional. Os exemplos de Anexos III e V não correspondem a um cálculo do regime selecionado.";
+      context="A NFS-e antiga não comprova o regime futuro.";
+      action="Revise o regime declarado antes de interpretar os exemplos.";
+    }else if(data.atividade_fator_r==="nao"){
+      heading="Fator R informado como não aplicável";
+      reason="Não é possível escolher entre os Anexos III e V pelo Fator R quando a atividade informada não está sujeita a essa regra.";
+      context="O anexo da atividade deve ser determinado por sua classificação fiscal, não pelo valor mais baixo do cartão.";
+      action="Confirme o CNAE, a natureza do serviço e o anexo aplicável.";
+    }else if(data.atividade_fator_r==="sim"&&fr){
+      const label=fr.threshold?"III":"V";
+      heading="Cenário condicionado pelo Fator R: Anexo "+label;
+      reason="Você indicou que a atividade está sujeita ao Fator R e informou folha elegível e RBT12. A proporção preliminar apurada é "+(fr.regulatory*100).toLocaleString("pt-BR",{maximumFractionDigits:2})+"%, "+(fr.threshold?"igual ou superior":"inferior")+" a 28%.";
+      context="Esse resultado sugere o Anexo "+label+" apenas se a atividade, o período-base e os dados informados forem válidos. Não é uma confirmação de enquadramento nem um DAS oficial.";
+      action="Confira classificação da atividade, competência, folha elegível e memória do PGDAS-D antes de considerar o cenário aplicável.";
+    }else if(data.atividade_fator_r==="sim"){
+      heading="Atividade sujeita ao Fator R, mas folha ou RBT12 ausente";
+      reason="Como a atividade foi indicada como sujeita ao Fator R, falta a relação entre folha elegível e RBT12 para distinguir os Anexos III e V.";
+      context="Não use o pró-labore isoladamente como folha total. Sem esses números não é possível inferir qual anexo é aplicável.";
+      action="Informe a folha elegível e o RBT12 quando souber, ou continue comparando os dois exemplos sem escolher um deles.";
+    }else{
+      heading="Enquadramento ainda não definido: dois exemplos, nenhuma indicação oficial";
+      reason="A descrição do serviço da NFS-e pode indicar atividade técnica ou consultiva, mas o documento isolado não define se a operação segue o Fator R.";
+      context=team?
+        "Você informou que trabalha sozinho e não retira pró-labore. Isso exige atenção ao Fator R caso a atividade esteja sujeita a ele, mas não permite concluir que a folha elegível é zero. O Anexo V é uma hipótese a investigar, não o resultado confirmado.":
+        "Os exemplos dos Anexos III e V representam hipóteses alternativas. Não se pode eleger uma delas sem o enquadramento da atividade e os dados apropriados.";
+      action="Confirme qual atividade foi efetivamente tributada no PGDAS-D e, quando aplicável, o cálculo do Fator R.";
+    }
+    const title=make("strong",heading);
+    const summary=make("p",reason);
+    const caution=make("p",context,"interpretation-caution");
+    const next=make("p","Próxima verificação: "+action,"interpretation-action");
+    const flags=make("div",undefined,"interpretation-flags");
+    flags.append(make("span","Classificação: "+(data.atividade_fator_r==="nao_confirmado"?"não confirmada":data.atividade_fator_r==="sim"?"Fator R informado como aplicável":"Fator R informado como não aplicável")),
+      make("span","Folha elegível: "+(data.folha_12m===""?"não informada":money(Number(data.folha_12m)))),
+      make("span","RBT12: "+(revenue===null?"não informado":money(revenue))));
+    if(projected===null)flags.append(make("span","Projeção anual: pendente"));
+    box.replaceChildren(title,flags,summary,caution,next);
+  }
   function renderResults(){
     const d=values(),fr=factor(d),box=$("simulationResults"),windowPeriod=referenceWindow(d.competencia_referencia);
     renderIllustrations(d);
+    renderInterpretation(d);
     const resultList=[];
     if(d.receita_12m!==""&&Number.isFinite(Number(d.receita_12m)))resultList.push(row("RBT12 declarado","Calculado",money(Number(d.receita_12m))+" (valor informado, não homologado no PGDAS-D; "+(windowPeriod?windowPeriod.start+" a "+windowPeriod.end:"período não confirmado")+")."));
     if(d.receita_prevista_2027!==""&&Number.isFinite(Number(d.receita_prevista_2027)))resultList.push(row("Projeção de faturamento para 2027","Calculado",money(Number(d.receita_prevista_2027))+" anual. Média mensal equivalente: "+money(Number(d.receita_prevista_2027)/12)+"."));
