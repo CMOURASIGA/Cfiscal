@@ -180,6 +180,18 @@ class Conferencia(unittest.TestCase):
         self.assertEqual(diagnosis["nivel"],"revisao")
         self.assertEqual(diagnosis["calculo_tributario"],"Não executado")
         self.assertIn("PGDAS-D",diagnosis["acao"])
+    def test_navegacao_telas_separadas(self):
+        html=self.call("/").decode()
+        for view in ("painel","clientes","notas","integracoes"):
+            self.assertIn('data-view="'+view+'"',html)
+            self.assertIn('data-nav="'+view+'"',html)
+        self.assertIn('id="sidebarToggle"',html)
+        self.assertIn('src="navigation.js"',html)
+        self.assertIn('data-view="painel" hidden',html)
+        ajuda=self.call("/ajuda.html").decode()
+        self.assertIn('data-nav="ajuda"',ajuda)
+        self.assertIn('id="sidebarToggle"',ajuda)
+        self.assertIn(b"CFiscalNavigate",self.call("/navigation.js"))
     def test_web(self):
         self.assertIn(b"CFiscal",self.call("/"))
         self.assertEqual(self.call("/api/notas"),[])
