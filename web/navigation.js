@@ -7,17 +7,17 @@
   const toggle=document.getElementById("sidebarToggle");
   function activate(){
     const page=location.hash.slice(1);
-    const view=allowed.has(page)?page:"painel";
+    const view=document.body.dataset.page==="ajuda"?"ajuda":allowed.has(page)?page:"painel";
     for(const section of sections)section.hidden=section.dataset.view!==view;
     for(const item of items){
       const active=item.dataset.nav===view;
       if(active)item.setAttribute("aria-current","page");
       else item.removeAttribute("aria-current");
     }
-    const labels={painel:"Dashboard",clientes:"Clientes",notas:"Notas fiscais",integracoes:"Integrações"};
+    const labels={painel:"Dashboard",clientes:"Clientes",notas:"Notas fiscais",integracoes:"Integrações",ajuda:"Ajuda fiscal"};
     document.title="CFiscal | "+labels[view];
     document.querySelector("#appMain").dataset.currentView=view;
-    window.scrollTo({top:0,behavior:"instant"});
+    if(sections.length)window.scrollTo({top:0,behavior:"instant"});
   }
   window.CFiscalNavigate=(view)=>{
     if(!allowed.has(view))return;
