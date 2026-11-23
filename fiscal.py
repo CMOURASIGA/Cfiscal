@@ -104,7 +104,7 @@ def contextual_diagnosis(data):
         "versao_regra":RULE_VERSION, "nivel":level, "titulo":title,
         "explicacao":explanation, "acao":action, "regime_informado":regime_label,
         "competencia":date, "campos_ibs_cbs_ausentes":missing,
-        "verificacao_aritmetica":data.get("status") or "Não executada",
+        "verificacao_aritmetica":("Não executada" if title.startswith("Ausência de IBS/CBS") else data.get("status") or "Não executada"),
         "validacao_assinatura":"Não executada",
         "validacao_xsd":"Não executada",
         "calculo_tributario":"Não executado",
