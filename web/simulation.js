@@ -105,8 +105,42 @@
     const summary=make("p","Você preencheu "+pr.complete+" de "+pr.total+" grupos principais. "+(dirty?"Existem alterações ainda não salvas.":"Verifique os itens pendentes antes de solicitar uma comparação fiscal."),"sim-summary");
     box.prepend(summary);
   }
+  function renderIllustrations(data){
+    const box=$("preliminaryExamples");
+    const example=window.CFiscalPreliminary?.calculate(data.receita_prevista_2027,data.receita_12m);
+    if(!example){
+      const empty=make("div",undefined,"preliminary-empty");
+      empty.append(make("strong","Informe a previsão anual de faturamento para visualizar os exemplos."),
+        make("p","Para a Consult Services, você pode usar R$ 156.000 de projeção anual como hipótese. O RBT12 e o anexo aplicável continuam sujeitos à confirmação."));
+      box.replaceChildren(empty);
+      return;
+    }
+    const header=make("div",undefined,"preliminary-head");
+    header.append(make("h3","Exemplos financeiros por anexo, não são impostos devidos"),
+      make("p","Projeção de receita: "+money(example.annual)+" por ano, equivalente a "+money(example.monthly)+" por mês."));
+    const summary=make("p",example.firstBracketConfirmedByInput?
+      "O RBT12 informado está dentro da primeira faixa (até R$ 180 mil), mas ainda não foi validado. Os anexos não estão confirmados para esta atividade.":
+      "Hipótese explícita: primeira faixa do Simples Nacional (RBT12 de até R$ 180 mil). O RBT12 não foi informado ou não sustenta essa faixa. Os números abaixo não representam a tributação real da empresa.","preliminary-caution");
+    const cards=make("div",undefined,"preliminary-grid");
+    for(const [annex,label] of [["III","Anexo III"],["V","Anexo V"]]){
+      const item=make("section",undefined,"preliminary-card");
+      const result=example.scenarios[annex];
+      item.append(make("h4",label+" | exemplo"),
+        make("strong",money(result.monthly)+"/mês"),
+        make("p",money(result.annual)+"/ano"),
+        make("small","Alíquota nominal ilustrativa: "+(result.rate*100).toLocaleString("pt-BR")+"%. Fórmula: "+money(example.monthly)+" × "+(result.rate*100).toLocaleString("pt-BR")+"%."),
+        make("small","Condição: primeira faixa e enquadramento no "+label+"; sem validação do DAS."));
+      cards.append(item);
+    }
+    const diff=make("p","Diferença matemática dos exemplos: "+money(example.monthlyDifference)+" por mês ou "+money(example.annualDifference)+" por ano. Não é economia comprovada nem recomendação de regime.","preliminary-difference");
+    const source=make("a","Ver tabelas legais do Simples Nacional, Anexos III e V");
+    source.href=example.source;source.target="_blank";source.rel="noopener noreferrer";
+    const limits=make("p","Este exemplo não contempla enquadramento fiscal efetivo, fator R confirmado, IBS/CBS em opção separada, IRPJ/CSLL de outros regimes, custos adicionais, créditos ou mudanças da receita ao longo dos meses.","preliminary-limit");
+    box.replaceChildren(header,summary,cards,diff,source,limits);
+  }
   function renderResults(){
     const d=values(),fr=factor(d),box=$("simulationResults"),windowPeriod=referenceWindow(d.competencia_referencia);
+    renderIllustrations(d);
     const resultList=[];
     if(d.receita_12m!==""&&Number.isFinite(Number(d.receita_12m)))resultList.push(row("RBT12 declarado","Calculado",money(Number(d.receita_12m))+" (valor informado, não homologado no PGDAS-D; "+(windowPeriod?windowPeriod.start+" a "+windowPeriod.end:"período não confirmado")+")."));
     if(d.receita_prevista_2027!==""&&Number.isFinite(Number(d.receita_prevista_2027)))resultList.push(row("Projeção de faturamento para 2027","Calculado",money(Number(d.receita_prevista_2027))+" anual. Média mensal equivalente: "+money(Number(d.receita_prevista_2027)/12)+"."));
