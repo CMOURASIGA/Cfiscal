@@ -34,4 +34,5 @@ jobs:
         run: |
           node --check web/app.js
           node --check web/dashboard.js
+          node --check web/navigation.js
           node --check web/componentes/consult-tabs.js
