@@ -1,5 +1,7 @@
 """Servidor monousuário, limitado ao loopback, sem dependências externas."""
 import json
+import re
+import uuid
 import os
 import sqlite3
 import sys
@@ -11,7 +13,7 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from threading import Timer
 from urllib import request, error
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, parse_qs
 from fiscal import parse, cents
 
 ROOT = Path(__file__).resolve().parent
@@ -28,6 +30,9 @@ def init():
         db.executescript("""
         CREATE TABLE IF NOT EXISTS notes (id TEXT PRIMARY KEY, xml TEXT, data TEXT, created TEXT);
         CREATE TABLE IF NOT EXISTS events (note TEXT, kind TEXT, data TEXT, created TEXT);
+        CREATE TABLE IF NOT EXISTS clients (id TEXT PRIMARY KEY, name TEXT NOT NULL, cnpj TEXT NOT NULL UNIQUE, active INTEGER NOT NULL DEFAULT 1, created TEXT NOT NULL);
+        CREATE TABLE IF NOT EXISTS note_clients (note_id TEXT PRIMARY KEY REFERENCES notes(id), client_id TEXT NOT NULL REFERENCES clients(id), created TEXT NOT NULL);
+        CREATE INDEX IF NOT EXISTS idx_note_clients_client ON note_clients(client_id);
         """)
 
 def upstream(kind, body, mime):
@@ -89,11 +94,23 @@ class Handler(SimpleHTTPRequestHandler):
         path = urlsplit(self.path).path
         if path == "/api/exemplos":
             return self.send_data([{"name":p.name,"xml":p.read_text(encoding="utf8")} for p in sorted((ROOT/"exemplos").glob("*.xml"))])
+        if path == "/api/clientes":
+            with closing(sqlite3.connect(DB)) as db:
+                clients = [dict(id=i,name=n,cnpj=c,active=bool(a)) for i,n,c,a in db.execute("SELECT id,name,cnpj,active FROM clients ORDER BY name")]
+            return self.send_data(clients)
         if path == "/api/notas":
-            with closing(sqlite3.connect(DB)) as db, db:
-                notes = {i:dict(json.loads(data), created=t, events=[]) for i,data,t in db.execute("SELECT id,data,created FROM notes ORDER BY rowid DESC")}
+            client_id = parse_qs(urlsplit(self.path).query).get("cliente", [""])[0]
+            with closing(sqlite3.connect(DB)) as db:
+                if client_id == "pendentes":
+                    records = db.execute("SELECT n.id,n.data,n.created FROM notes n LEFT JOIN note_clients nc ON nc.note_id=n.id WHERE nc.note_id IS NULL ORDER BY n.rowid DESC").fetchall()
+                elif client_id:
+                    records = db.execute("SELECT n.id,n.data,n.created FROM notes n JOIN note_clients nc ON nc.note_id=n.id WHERE nc.client_id=? ORDER BY n.rowid DESC",(client_id,)).fetchall()
+                else:
+                    records = []
+                notes = {i:dict(json.loads(data),created=t,events=[],client_id=client_id if client_id!="pendentes" else None) for i,data,t in records}
                 for i,kind,data,t in db.execute("SELECT note,kind,data,created FROM events ORDER BY rowid"):
-                    notes[i]["events"].append(dict(kind=kind, data=json.loads(data), date=t))
+                    if i in notes:
+                        notes[i]["events"].append(dict(kind=kind,data=json.loads(data),date=t))
             return self.send_data(list(notes.values()))
         if path.startswith("/api/"):
             return self.send_data({"error":"Recurso desconhecido."},404)
@@ -108,9 +125,24 @@ class Handler(SimpleHTTPRequestHandler):
                 raise ValueError("Tamanho inválido.")
             body = json.loads(self.rfile.read(size))
             with closing(sqlite3.connect(DB, timeout=15)) as db, db:
-                if self.path == "/api/importar":
+                if self.path == "/api/clientes":
+                    name = str(body.get("nome","")).strip()
+                    cnpj = re.sub(r"\\D","",str(body.get("cnpj","")))
+                    if len(name)<3 or len(name)>150 or not re.fullmatch(r"\\d{14}",cnpj):
+                        raise ValueError("Informe nome (3 a 150 caracteres) e CNPJ com 14 dígitos.")
+                    if db.execute("SELECT 1 FROM clients WHERE cnpj=?",(cnpj,)).fetchone():
+                        raise ValueError("Cliente já cadastrado com este CNPJ.")
+                    client_id = uuid.uuid4().hex
+                    db.execute("INSERT INTO clients(id,name,cnpj,created) VALUES (?,?,?,?)",(client_id,name,cnpj,now()))
+                    result = {"id":client_id,"nome":name,"cnpj":cnpj}
+                elif self.path == "/api/importar":
+                    client_id = str(body.get("cliente_id",""))
+                    client = db.execute("SELECT cnpj FROM clients WHERE id=? AND active=1",(client_id,)).fetchone()
+                    if not client: raise ValueError("Selecione um cliente cadastrado e ativo antes de importar.")
                     xml = body["xml"]
                     data = parse(xml)
+                    if data["cnpj"] != client[0]:
+                        raise ValueError("O CNPJ do emitente no XML não corresponde ao cliente selecionado. Importação bloqueada.")
                     # Somente amostras idênticas às distribuídas recebem premissas de exemplo.
                     for sample in (ROOT/"exemplos").glob("*.xml"):
                         if xml.replace("\r\n","\n") == sample.read_text(encoding="utf8"):
@@ -121,9 +153,24 @@ class Handler(SimpleHTTPRequestHandler):
                         old = db.execute("SELECT xml FROM notes WHERE id=?", (data["id"],)).fetchone()[0]
                         if old != xml:
                             raise ValueError("Já existe uma nota com este identificador e conteúdo diferente.")
+                        association = db.execute("SELECT client_id FROM note_clients WHERE note_id=?",(data["id"],)).fetchone()
+                        if association and association[0] != client_id:
+                            raise ValueError("Esta nota já está vinculada a outro cliente. Operação bloqueada.")
+                    db.execute("INSERT OR IGNORE INTO note_clients(note_id,client_id,created) VALUES (?,?,?)",(data["id"],client_id,now()))
                     result = {"importada": bool(cur.rowcount), "id": data["id"], "numero": data["number"]}
+                elif self.path == "/api/vincular":
+                    client_id = str(body.get("cliente_id",""))
+                    client = db.execute("SELECT cnpj FROM clients WHERE id=? AND active=1",(client_id,)).fetchone()
+                    row = db.execute("SELECT data FROM notes WHERE id=?",(body.get("id"),)).fetchone()
+                    if not client or not row: raise ValueError("Cliente ou nota não encontrado.")
+                    if json.loads(row[0])["cnpj"] != client[0]: raise ValueError("O CNPJ da nota não corresponde ao cliente selecionado.")
+                    current = db.execute("SELECT client_id FROM note_clients WHERE note_id=?",(body["id"],)).fetchone()
+                    if current and current[0] != client_id: raise ValueError("Nota já vinculada a outro cliente.")
+                    db.execute("INSERT OR IGNORE INTO note_clients(note_id,client_id,created) VALUES (?,?,?)",(body["id"],client_id,now()))
+                    result = {"ok":True}
                 else:
-                    row = db.execute("SELECT xml,data FROM notes WHERE id=?", (body["id"],)).fetchone()
+                    client_id=str(body.get("cliente_id",""))
+                    row = db.execute("SELECT n.xml,n.data FROM notes n JOIN note_clients nc ON nc.note_id=n.id WHERE n.id=? AND nc.client_id=?", (body["id"],client_id)).fetchone()
                     if not row:
                         raise ValueError("Nota não encontrada.")
                     xml, data = row[0], json.loads(row[1])
