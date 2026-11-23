@@ -104,3 +104,9 @@ body:not(.sidebar-collapsed) #appMain{margin-left:228px}
 .sim-check p{margin:9px 0 0;font-size:13px;line-height:1.5}
 .sim-summary{grid-column:1/-1;padding:12px;border-left:3px solid #127abb;background:#f0f7fc;font-size:13px}
 @media(max-width:710px){.sim-diagnosis,.sim-results{grid-template-columns:1fr}.sim-steps button{flex:1 1 100%}}
+
+.simulation-warning{border:1px solid #d9a054;background:#fff6e7;border-radius:9px;padding:12px 15px;margin:12px 0;color:#70490b}
+.simulation-warning p{margin:3px 0;line-height:1.5;font-size:13px}
+.simulation-warning[hidden]{display:none!important}
+.sim-reference-button{padding:10px 14px;border:1px solid #3674aa;background:#fff;color:#064573;border-radius:8px;margin-top:8px}
+.sim-reference-button:disabled{opacity:.45;cursor:not-allowed}
