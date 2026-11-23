@@ -83,3 +83,9 @@ body:not(.sidebar-collapsed) #appMain{margin-left:228px}
 .sensitive-service{margin-top:14px;border:1px solid #d9e2eb;padding:12px;border-radius:8px}
 .sensitive-service p{white-space:pre-wrap;overflow-wrap:anywhere}
 @media(max-width:650px){.simulation-form,.scenario-grid{grid-template-columns:1fr}}
+
+.simulation-form .field-hint{display:block;font-size:12px;line-height:1.5;color:#556a80;font-weight:400;margin:3px 0 4px}
+.simulation-explain{padding:15px;border:1px solid #c7dce9;border-radius:10px;background:#f3f8fc;margin:16px 0}
+.simulation-explain p{margin-top:8px;line-height:1.55;font-size:13px}
+.simulation-wide{grid-column:1/-1;margin:4px 0}.simulation-explain small{display:block;margin-top:9px;color:#526b80}
+.factor-preview{margin-top:12px;padding:12px;background:white;border-radius:8px;border:1px solid #d4e0ec;font-weight:600;color:#1a4869}
