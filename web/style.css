@@ -89,3 +89,18 @@ body:not(.sidebar-collapsed) #appMain{margin-left:228px}
 .simulation-explain p{margin-top:8px;line-height:1.55;font-size:13px}
 .simulation-wide{grid-column:1/-1;margin:4px 0}.simulation-explain small{display:block;margin-top:9px;color:#526b80}
 .factor-preview{margin-top:12px;padding:12px;background:white;border-radius:8px;border:1px solid #d4e0ec;font-weight:600;color:#1a4869}
+
+/* Fluxo guiado da simulação tributária */
+.sim-steps{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+.sim-steps button{border-radius:9px;padding:10px 14px;background:#edf3f8;color:#194164;border:1px solid #d3dfea}
+.sim-steps button.active{background:#003b73;color:white;border-color:#003b73}
+.simulation-progress{font-size:13px;padding:10px 12px;border:1px solid #d6e4ee;border-radius:8px;background:#f6f9fd}
+.sim-panel[hidden]{display:none!important}
+.sim-diagnosis,.sim-results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:17px 0}
+.sim-check{border:1px solid #d7e1eb;border-radius:10px;padding:15px;background:#fafcff;min-width:0}
+.sim-check strong{display:block;font-size:14px}
+.sim-check span{display:inline-block;margin-top:8px;padding:3px 8px;border-radius:5px;font-size:11px}
+.sim-check .sim-ok{background:#e5f3ea;color:#1d6247}.sim-check .sim-pending{background:#f4eee2;color:#805b20}
+.sim-check p{margin:9px 0 0;font-size:13px;line-height:1.5}
+.sim-summary{grid-column:1/-1;padding:12px;border-left:3px solid #127abb;background:#f0f7fc;font-size:13px}
+@media(max-width:710px){.sim-diagnosis,.sim-results{grid-template-columns:1fr}.sim-steps button{flex:1 1 100%}}
