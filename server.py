@@ -229,7 +229,7 @@ class Handler(SimpleHTTPRequestHandler):
                     if not db.execute("SELECT 1 FROM clients WHERE id=? AND active=1",(client_id,)).fetchone():
                         raise ValueError("Selecione um cliente cadastrado e ativo.")
                     values = {}
-                    for key in ("receita_12m","receita_prevista_2027","folha_12m","despesas_12m"):
+                    for key in ("receita_12m","receita_prevista_2027","folha_12m","despesas_12m","prolabore_mensal"):
                         raw = body.get(key)
                         if raw in ("", None):
                             values[key] = None
@@ -244,7 +244,10 @@ class Handler(SimpleHTTPRequestHandler):
                     regime=str(body.get("regime_confirmado","nao_confirmado"))
                     if regime not in ("nao_confirmado","simples","presumido","real"):
                         raise ValueError("Regime selecionado inválido.")
-                    values.update(regime_confirmado=regime, exercicio=2027)
+                    equipe=str(body.get("estrutura_equipe","nao_informado"))
+                    if equipe not in ("nao_informado","so_socios","com_funcionarios"):
+                        raise ValueError("Estrutura da equipe inválida.")
+                    values.update(regime_confirmado=regime,estrutura_equipe=equipe,exercicio=2027)
                     db.execute("INSERT INTO simulation_profiles(client_id,data,updated) VALUES(?,?,?) ON CONFLICT(client_id) DO UPDATE SET data=excluded.data,updated=excluded.updated",
                                (client_id,json.dumps(values),now()))
                     result={"ok":True,"dados":values,"aviso":"Dados salvos localmente. Nenhum imposto foi calculado e nenhuma mudança de regime foi recomendada."}
