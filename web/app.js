@@ -89,12 +89,17 @@ async function batch(files) {
     $("receipts").scrollIntoView({block:"nearest"});
   } finally { $("import").disabled=$("demo").disabled=false; }
 }
+function serviceSummary(value){
+  const text=String(value||"");
+  const cleaned=text.split(/\b(?:DADOS\s+BANC[AÁ]RIOS|BANCO\s*:|AG[EÊ]NCIA\s*:|CONTA\s+CORRENTE\s*:|PIX\s*:)/i)[0].trim();
+  return cleaned.length>180?cleaned.slice(0,180)+"…":cleaned||"Não informado";
+}
 function detail(n) {
   current=n;
   $("detailTitle").textContent="NFS-e nº "+n.number;
   $("detailMessage").textContent="";
   const values=el("dl");
-  for(const [key,val] of Object.entries({"Empresa":n.company,"CNPJ":n.cnpj,"Competência":n.date,"Serviço":n.service,
+  for(const [key,val] of Object.entries({"Empresa":n.company,"CNPJ":n.cnpj,"Competência":n.date,"Serviço (resumo)":serviceSummary(n.service),
     "Valor do serviço":money(n.gross),"CBS declarada":money(n.cbs),"IBS estadual":money(n.state),"IBS municipal":money(n.city),
     "IBS declarado":money(n.ibs),"Soma das parcelas":money(n.expected===null?null:n.expected/100),
     "Diferença":money(n.difference===null?null:n.difference/100)})) values.append(el("dt",key),el("dd",val||"Ausente"));
@@ -132,7 +137,16 @@ function detail(n) {
     }
     diagnosisBox.classList.add("diagnosis-"+diagnostic.nivel);
   }
-  $("overview").replaceChildren(...(diagnostic?[diagnosisBox]:[]),el("h3","Conferência aritmética do documento"),pill(n.status),el("p",n.reason),values);
+  const contextual=diagnostic?.titulo?.startsWith("Ausência de IBS/CBS");
+  const aritStatus=contextual?"Conferência não executada":n.status;
+  const aritReason=contextual?
+    "A nota de 2026 não traz valores de IBS para somar. A ausência foi contextualizada para a competência e o regime informados no XML; isso não atesta conformidade fiscal integral.":n.reason;
+  $("overview").replaceChildren(...(diagnostic?[diagnosisBox]:[]),el("h3","Conferência aritmética do documento"),pill(aritStatus),el("p",aritReason),values);
+  if(n.service && n.service!==serviceSummary(n.service)){
+    const original=el("details",undefined,"sensitive-service");
+    original.append(el("summary","Mostrar descrição integral original (pode conter dados bancários)"),el("p",n.service));
+    $("overview").append(original);
+  }
   if(legacyMode){
     const btn=el("button","Vincular ao cliente selecionado");
     btn.onclick=async()=>{
