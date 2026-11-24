@@ -136,3 +136,38 @@ body:not(.sidebar-collapsed) #appMain{margin-left:228px}
 .interpretation-flags span{background:#eaf1f7;border-radius:6px;padding:7px 9px;font-size:12px;color:#33536d}
 .interpretation-caution{border-left:3px solid #d99a42;background:#fff7eb;padding:10px 12px;border-radius:5px}
 .interpretation-action{border-left:3px solid #2275af;padding:10px 12px;background:#eaf5fb;border-radius:5px;font-weight:550}
+
+/* CFiscal | planejamento tributário, auditoria e relatórios */
+.tax-memory{margin:18px 0;padding:17px;background:#f3f9fd;border:1px solid #b8d5e9;border-radius:11px}
+.tax-memory h3{margin:0 0 10px;font-size:17px;color:#103b63}
+.tax-memory-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.tax-memory-card{min-width:0;padding:15px;border:1px solid #d6e4ee;background:white;border-radius:9px}
+.tax-memory-card h4{margin:0 0 9px}
+.tax-memory-card strong{display:block;font-size:22px;color:#003b73}
+.tax-memory-card p,.tax-memory-card small,.tax-memory-card a{display:block;font-size:12px;line-height:1.55;margin:7px 0}
+.tax-caution,.fiscal-disclaimer{padding:11px 13px;border-left:3px solid #bb944b;background:#fffbf2;font-size:12px;line-height:1.6}
+.fiscal-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:16px 0}
+.fiscal-stat{padding:15px;border:1px solid #d7e4ef;border-radius:10px;background:#f8fbfe}
+.fiscal-stat small{display:block;color:#4d6880;font-size:12px}
+.fiscal-stat strong{display:block;font-size:23px;color:#003b73;margin:8px 0}
+.table-scroll{max-width:100%;overflow:auto;margin-top:18px}
+.table-scroll table{min-width:680px}
+.table-scroll td,.table-scroll th{font-size:12px;line-height:1.45;vertical-align:top}
+.fiscal-task{display:flex;align-items:center;gap:14px;border-bottom:1px solid #e3e9f0;padding:13px 4px}
+.fiscal-task span{flex:1;font-size:13px}
+.fiscal-result{padding:15px;border:1px solid #d3dfeb;border-radius:10px;background:#fbfdff;margin:13px 0;break-inside:avoid}
+.fiscal-result h3{font-size:15px}.fiscal-result strong{font-size:21px;color:#003b73}
+.fiscal-result p,.fiscal-result a,.fiscal-result small{display:block;font-size:12px;line-height:1.5}
+.fiscal-report{margin:20px 0;padding:16px;border:1px solid #d8e4ed;background:white;border-radius:10px}
+.fiscal-report p{font-size:13px;line-height:1.65}
+.app-sidebar nav{max-height:calc(100vh - 155px);overflow-y:auto;scrollbar-width:thin}
+@media(max-width:820px){.tax-memory-grid{grid-template-columns:1fr}.app-sidebar nav{max-height:none}}
+@media print{
+  body:has(#view-relatorios:not([hidden])) .app-sidebar,
+  body:has(#view-relatorios:not([hidden])) .workspace-header,
+  body:has(#view-relatorios:not([hidden])) .page-heading,
+  body:has(#view-relatorios:not([hidden])) .sheet>.actions{display:none!important}
+  body:has(#view-relatorios:not([hidden])) #appMain{margin:0!important;padding:0!important}
+  body:has(#view-relatorios:not([hidden])) .sheet{border:none;box-shadow:none}
+  body:has(#view-relatorios:not([hidden])) .fiscal-report{border:none;padding:0}
+}
