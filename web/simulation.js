@@ -192,16 +192,49 @@
     if(projected===null)flags.append(make("span","Projeção anual: pendente"));
     box.replaceChildren(title,flags,summary,caution,...(selectedExample?[selectedExample]:[]),next);
   }
+  function renderTaxMemory(data){
+    const box=$("taxMemory");
+    if(!box)return;
+    const annual=data.receita_prevista_2027!==""?Number(data.receita_prevista_2027):null;
+    const results=window.CFiscalTaxEngine?.compare({
+      rbt12:data.receita_12m,monthlyRevenue:annual===null?null:annual/12,
+      competence:data.competencia_referencia||"2027-01",
+      factorRApplicable:data.atividade_fator_r==="sim"?true:data.atividade_fator_r==="nao"?false:null,
+      payroll12:data.folha_12m
+    });
+    const header=make("h3","Memória de cálculo | Simples Nacional 2027–2028");
+    const caution=make("p","Estimativas condicionadas. A escolha de anexo depende do serviço, da legislação e do Fator R, quando aplicável. Não é DAS apurado pelo PGDAS-D.","tax-caution");
+    const content=make("div",undefined,"tax-memory-grid");
+    for(const key of ["III","V"]){
+      const r=results?.[key],card=make("section",undefined,"tax-memory-card");
+      card.append(make("h4","Anexo "+key));
+      if(r?.status==="hypothetical"){
+        card.append(make("strong",money(r.monthlyEstimate)+"/mês"),
+          make("p","Faixa: "+r.band+" | RBT12: "+money(r.rbt12)),
+          make("p","Alíquota nominal: "+r.nominalPct.toLocaleString("pt-BR")+"% | Dedução: "+money(r.deduction)),
+          make("p","Alíquota efetiva: "+r.effectivePct.toLocaleString("pt-BR")+"%"),
+          make("p","Fórmula: ((RBT12 × nominal) − dedução) ÷ RBT12 × receita do mês."),
+          make("p","Receita mensal usada: "+money(r.monthlyRevenue)),
+          make("small","Regra: "+r.rule));
+        const source=make("a","Consultar tabela legal");source.href=r.source;source.target="_blank";source.rel="noopener noreferrer";card.append(source);
+      }else{
+        card.append(make("p",r?.message||"Informe RBT12 e previsão anual para gerar um cálculo condicionado."));
+      }
+      content.append(card);
+    }
+    box.replaceChildren(header,caution,content);
+  }
   function renderResults(){
     const d=values(),fr=factor(d),box=$("simulationResults"),windowPeriod=referenceWindow(d.competencia_referencia);
     renderIllustrations(d);
+    renderTaxMemory(d);
     renderInterpretation(d);
     const resultList=[];
     if(d.receita_12m!==""&&Number.isFinite(Number(d.receita_12m)))resultList.push(row("RBT12 informado","Informado",money(Number(d.receita_12m))+" (valor informado, não homologado no PGDAS-D; "+(windowPeriod?windowPeriod.start+" a "+windowPeriod.end:"período não confirmado")+")."));
     if(d.receita_prevista_2027!==""&&Number.isFinite(Number(d.receita_prevista_2027)))resultList.push(row("Projeção de faturamento para 2027","Informado",money(Number(d.receita_prevista_2027))+" anual. Média mensal equivalente: "+money(Number(d.receita_prevista_2027)/12)+"."));
     if(fr)resultList.push(row("Fator R informativo","Calculado",(fr.regulatory*100).toLocaleString("pt-BR",{maximumFractionDigits:2})+"% para análise preliminar, condicionado ao período e à confirmação contábil."));
     if(fr&&fr.revenue>0)resultList.push(row("Referência de folha para 28%","Calculado",money(fr.revenue*0.28)+" em 12 meses. Não representa recomendação de pró-labore ou necessidade de aumentar despesas."));
-    resultList.push(row("DAS ou impostos de 2027","Pendente","Não calculados. Faltam confirmação de enquadramento, parâmetros oficiais de 2027 e memória de cálculo; não é possível inferir imposto devido apenas pelo RBT12."));
+    resultList.push(row("DAS efetivamente devido em 2027","Pendente","A memória de cálculo condicionada já pode ser consultada acima; apuração oficial e anexo aplicável dependem de dados fiscais validados."));
     resultList.push(row("Economia entre regimes","Pendente","Não determinada. As opções de recolhimento e eventuais prazos devem ser verificados com a contabilidade antes de qualquer decisão."));
     box.replaceChildren(...resultList);
     const footer=make("p","Resultado preliminar, exclusivamente informativo. Atualizar as regras oficiais quando a competência de apuração mudar.","sim-summary");
