@@ -6,7 +6,7 @@ const path=require("node:path");
 const vm=require("node:vm");
 const {webcrypto}=require("node:crypto");
 const source=fs.readFileSync(path.join(__dirname,"../web/browser-store.js"),"utf8");
-function environment(existing=new Map()){
+function environment(existing=new Map(),DOMParserClass){
   const localStorage={
     getItem:key=>existing.has(key)?existing.get(key):null,
     setItem:(key,value)=>existing.set(key,String(value)),
@@ -20,7 +20,7 @@ function environment(existing=new Map()){
   const context=vm.createContext({
     location:{hostname:"cfiscal.vercel.app",origin:"https://cfiscal.vercel.app",href:"https://cfiscal.vercel.app/"},
     window,localStorage,document:{addEventListener:(name,fn)=>{callbacks[name]=fn;}},
-    URL,URLSearchParams,Response,TextEncoder,crypto:webcrypto,setTimeout,console
+    URL,URLSearchParams,Response,TextEncoder,crypto:webcrypto,setTimeout,console,DOMParser:DOMParserClass
   });
   vm.runInContext(source,context);
   async function call(endpoint,body){
@@ -66,4 +66,51 @@ test("adapter nao interfere na API original no Python localhost",()=>{
   const context=vm.createContext({window,location:{hostname:"127.0.0.1"}});
   vm.runInContext(source,context);
   assert.equal(window.fetch(),42);
+});
+
+function node(localName,text="",children=[]){
+  return {localName,namespaceURI:"http://www.sped.fazenda.gov.br/nfse",
+    children,textContent:text,getAttribute:(key)=>key==="Id"?"NFSeTest":null};
+}
+function xmlParser(){
+  const leaf=(name,value)=>node(name,value);
+  const group=node("infNFSe","",[
+    leaf("nNFSe","11"),
+    node("emit","",[leaf("xNome","Empresa teste"),leaf("CNPJ","12345678000199")]),
+    node("DPS","",[node("infDPS","",[
+      leaf("dCompet","2026-11-09"),
+      node("prest","",[node("regTrib","",[leaf("opSimpNac","3")])]),
+      node("serv","",[node("cServ","",[leaf("xDescServ","Consultoria de software"),leaf("cNBS","115011000")])]),
+      node("valores","",[node("vServPrest","",[leaf("vServ","13000.00")])])
+    ])])
+  ]);
+  return class DOMParserFake {
+    parseFromString(){return {documentElement:node("NFSe","",[group]),
+      getElementsByTagName:()=>[]};}
+  };
+}
+test("importacao XML nacional com CNPJ, duplicidade, diagnostico e dashboard web",async()=>{
+  const env=environment(new Map(),xmlParser());
+  const id=(await env.call("/api/clientes",{nome:"Empresa teste",cnpj:"12345678000199"})).data.id;
+  const xml='<NFSe xmlns="http://www.sped.fazenda.gov.br/nfse"><infNFSe Id="NFSeTest"></infNFSe></NFSe>';
+  const imported=await env.call("/api/importar",{cliente_id:id,xml});
+  assert.equal(imported.status,200);
+  assert.equal(imported.data.importada,true);
+  const repeated=await env.call("/api/importar",{cliente_id:id,xml});
+  assert.equal(repeated.data.importada,false);
+  const notes=(await env.call("/api/notas?cliente="+id)).data;
+  assert.equal(notes.length,1);
+  assert.equal(notes[0].gross,"13000.00");
+  assert.match(notes[0].diagnostico.titulo,/Ausência de IBS\/CBS/);
+  const business=(await env.call("/api/dashboard?cliente="+id)).data;
+  assert.equal(business.notas,1);
+  assert.equal(business.valor_servicos_informado,"13000.00");
+  assert.equal(business.ausencias_compativeis_2026,1);
+  const review=await env.call("/api/revisar",{id:imported.data.id,cliente_id:id,
+    responsavel:"Revisor local",situacao:"Concluída",comentario:"Conferida a nota de teste"});
+  assert.equal(review.status,200);
+  assert.equal((await env.call("/api/notas?cliente="+id)).data[0].events.length,1);
+  const other=(await env.call("/api/clientes",{nome:"Outro cliente",cnpj:"98765432000120"})).data.id;
+  assert.equal((await env.call("/api/importar",{cliente_id:other,xml})).status,422);
+  assert.equal((await env.call("/api/dashboard?perfil=contador")).data.clientes.length,2);
 });
