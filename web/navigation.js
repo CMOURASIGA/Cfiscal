@@ -2,7 +2,7 @@
 (() => {
   const sections=[...document.querySelectorAll(".app-view")];
   const items=[...document.querySelectorAll("[data-nav]")];
-  const allowed=new Set(["painel","clientes","notas","simulacao","integracoes"]);
+  const allowed=new Set(["painel","clientes","notas","simulacao","auditoria","contador","impacto","agenda","relatorios","integracoes"]);
   const sidebar=document.getElementById("sidebar");
   const toggle=document.getElementById("sidebarToggle");
   function activate(){
@@ -14,7 +14,7 @@
       if(active)item.setAttribute("aria-current","page");
       else item.removeAttribute("aria-current");
     }
-    const labels={painel:"Dashboard",clientes:"Clientes",notas:"Notas fiscais",simulacao:"Simulação tributária",integracoes:"Integrações",ajuda:"Ajuda fiscal"};
+    const labels={painel:"Dashboard",clientes:"Clientes",notas:"Notas fiscais",simulacao:"Simulação tributária",auditoria:"Auditoria fiscal",contador:"Central do contador",impacto:"Impacto financeiro",agenda:"Agenda tributária",relatorios:"Relatórios fiscais",integracoes:"Integrações",ajuda:"Ajuda fiscal"};
     document.title="CFiscal | "+labels[view];
     document.querySelector("#appMain").dataset.currentView=view;
     if(sections.length)window.scrollTo({top:0,behavior:"instant"});
