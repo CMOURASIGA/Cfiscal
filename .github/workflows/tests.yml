@@ -37,6 +37,7 @@ jobs:
           node --check web/navigation.js
           node --check web/simulation.js
           node --check web/preliminary.js
+          node --check web/browser-store.js
           node --check web/componentes/consult-tabs.js
       - name: Testar exemplos financeiros
-        run: node --test tests/preliminary.test.js
+        run: node --test tests/preliminary.test.js tests/browser-store.test.js
