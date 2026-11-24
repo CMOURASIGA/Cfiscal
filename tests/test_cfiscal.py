@@ -247,6 +247,20 @@ class Conferencia(unittest.TestCase):
         self.assertIn("m-14",js)
         self.assertIn('payroll===0?0.01:raw',js)
 
+    def test_modulos_cfiscal_produto_e_motor_versionado(self):
+        html=self.call("/").decode()
+        for view in ("auditoria","contador","impacto","agenda","relatorios"):
+            self.assertIn('data-view="'+view+'"',html)
+            self.assertIn('data-nav="'+view+'"',html)
+        for name in ("tax-engine.js","fiscal-workspace.js"):
+            self.assertIn('src="'+name+'"',html)
+            js=self.call("/"+name).decode()
+            self.assertGreater(len(js),1000)
+        self.assertIn("taxMemory",html)
+        self.assertIn("reportPrint",html)
+        self.assertIn("agendaTasks",html)
+        self.assertIn("auditTable",html)
+
     def test_web(self):
         self.assertIn(b"CFiscal",self.call("/"))
         self.assertEqual(self.call("/api/notas"),[])
