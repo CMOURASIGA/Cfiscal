@@ -279,7 +279,11 @@
     section.hidden=false;
     const label=document.getElementById("storageModeLabel");
     if(label)label.textContent="Dados neste navegador";
-    document.getElementById("browserBackup").onclick=()=>triggerDownload(JSON.stringify({exportado_em:now(),...db},null,2),"CFiscal-backup-navegador.json");
+    document.getElementById("browserBackup").onclick=()=>{
+      let tasks=[];
+      try{const parsed=JSON.parse(localStorage.getItem("cfiscal:agenda:v1")||"[]");if(Array.isArray(parsed))tasks=parsed;}catch(_){}
+      triggerDownload(JSON.stringify({exportado_em:now(),...db,agenda_tasks:tasks},null,2),"CFiscal-backup-navegador.json");
+    };
     const chooser=document.getElementById("browserRestoreFile");
     document.getElementById("browserRestore").onclick=()=>chooser.click();
     chooser.onchange=async()=>{
@@ -289,13 +293,18 @@
       try{
         const imported=validateState(JSON.parse(await file.text()));
         if(!window.confirm("Restaurar o backup SUBSTITUI os dados deste navegador. Continue somente se tiver outra cópia dos dados atuais."))return;
-        save(imported);location.reload();
+        save(imported);
+        if(Array.isArray(imported.agenda_tasks)){
+          if(imported.agenda_tasks.length>1000)throw Error("Backup contém tarefas em excesso.");
+          localStorage.setItem("cfiscal:agenda:v1",JSON.stringify(imported.agenda_tasks));
+        }
+        location.reload();
       }catch(e){notice("Não foi possível restaurar: "+e.message);}
     };
     document.getElementById("browserClear").onclick=()=>{
       if(!window.confirm("Apagar TODOS os clientes, XMLs, revisões e simulações deste navegador? Exporte antes uma cópia."))return;
       if(!window.confirm("Confirma a exclusão DEFINITIVA dos dados locais?"))return;
-      try{localStorage.removeItem(KEY);db=empty();location.reload();}catch(e){notice(e.message);}
+      try{localStorage.removeItem(KEY);localStorage.removeItem("cfiscal:agenda:v1");db=empty();location.reload();}catch(e){notice(e.message);}
     };
     const motor=document.getElementById("engine");
     if(motor){
