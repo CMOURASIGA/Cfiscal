@@ -247,6 +247,18 @@ class Conferencia(unittest.TestCase):
         self.assertIn("m-14",js)
         self.assertIn('payroll===0?0.01:raw',js)
 
+    def test_continuar_da_nota_para_simulacao(self):
+        html=self.call("/").decode()
+        js=self.call("/app.js").decode()
+        help_html=self.call("/ajuda.html").decode()
+        for item in ("documentNextStep","documentStepStatus","documentReviewTab","documentContinue"):
+            self.assertIn('id="'+item+'"',html)
+        self.assertIn('window.CFiscalNavigate("simulacao")',js)
+        self.assertIn('lastReview.data.situacao',js)
+        self.assertIn('$("drawer").close()',js)
+        self.assertIn("Próximo passo: Simulação tributária",help_html)
+        self.assertIn("A aba Motores não é obrigatória",help_html)
+
     def test_ajuda_fiscal_autossuficiente(self):
         ajuda=self.call("/ajuda.html").decode()
         for text in (
