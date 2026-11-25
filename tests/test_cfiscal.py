@@ -91,7 +91,7 @@ class Conferencia(unittest.TestCase):
             self.assertEqual(first["id"],repeat["id"])
             self.assertEqual(first["numero"],f.stem)
         self.assertEqual(len(self.all_notes()),7)
-        self.assertIn("Recebi um XML de nota de serviço",self.call("/ajuda.html").decode())
+        self.assertIn("Seu roteiro de utilização",self.call("/ajuda.html").decode())
     def test_invalid(self):
         for xml in ("<NFSe>","<NFe/>","<!DOCTYPE x><x/>"):
             with self.assertRaises(ValueError):parse(xml)
@@ -246,6 +246,37 @@ class Conferencia(unittest.TestCase):
         self.assertIn("warnings()",js)
         self.assertIn("m-14",js)
         self.assertIn('payroll===0?0.01:raw',js)
+
+    def test_ajuda_fiscal_autossuficiente(self):
+        ajuda=self.call("/ajuda.html").decode()
+        for text in (
+            "Aprenda a utilizar o CFiscal",
+            "Seu roteiro de utilização",
+            "Como preencher a Simulação Tributária",
+            "Como interpretar os resultados",
+            "Central do Contador",
+            "Impacto Financeiro",
+            "Agenda Tributária",
+            "Relatórios",
+            "Resolução de problemas comuns",
+            "Backup, privacidade e migração futura",
+        ):
+            self.assertIn(text,ajuda)
+        for step in range(1,9):
+            self.assertIn(f'data-check="{step}"',ajuda)
+        for path in ("clientes","notas","simulacao","auditoria","contador","impacto","agenda","relatorios"):
+            self.assertIn('href="/#'+path+'"',ajuda)
+        self.assertIn('src="help.js"',ajuda)
+        self.assertIn('href="help.css"',ajuda)
+        self.assertIn('id="helpSearch"',ajuda)
+        self.assertIn('data-role="contador"',ajuda)
+        self.assertIn("localStorage",ajuda)
+        self.assertIn("DAS oficialmente apurado",ajuda)
+        self.assertGreater(len(self.call("/help.js")),500)
+        self.assertGreater(len(self.call("/help.css")),500)
+        main=self.call("/").decode()
+        self.assertIn('href="ajuda.html#roteiro"',main)
+        self.assertIn('href="ajuda.html#simulacao"',main)
 
     def test_modulos_cfiscal_produto_e_motor_versionado(self):
         html=self.call("/").decode()
