@@ -1,0 +1,61 @@
+/* CFiscal | Central de Ajuda de autosserviço */
+.help-center{max-width:1450px}
+.help-center .help-topbar{display:flex;justify-content:space-between;align-items:center;gap:16px}
+.help-hero{border:1px solid #cbdbe9;border-radius:13px;padding:clamp(18px,3vw,32px);background:linear-gradient(145deg,#f1f7fc 0%,#ffffff 80%);margin:16px 0 20px}
+.help-hero .help-eyebrow{font-size:12px;color:#416584;font-weight:600;margin-bottom:8px}
+.help-hero h1{font-size:clamp(25px,3vw,34px);line-height:1.2;color:#0e3359;margin:0 0 11px}
+.help-hero>p{color:#405b73;line-height:1.65;font-size:14px;max-width:800px}
+.help-toolbar{margin-top:20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.help-toolbar label{font-size:12px;font-weight:700;color:#163c61}
+.help-toolbar input{width:min(620px,100%);flex:1 1 270px;border:1px solid #b7cce0;border-radius:8px;min-height:40px;padding:10px 12px;background:white}
+.help-toolbar button{border-radius:8px;min-height:40px;padding:8px 14px}
+.help-role-controls{display:flex;gap:8px;margin-top:15px;flex-wrap:wrap}
+.help-role-controls button{padding:10px 15px;border:1px solid #b9cde0;background:white;color:#1a4568;border-radius:8px;font-weight:600}
+.help-role-controls button.active{background:#003b73;color:#fff;border-color:#003b73}
+.help-quicklinks{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px}
+.help-quicklinks a{padding:7px 10px;border-radius:6px;background:#e4eef7;color:#164a73;font-weight:600;font-size:12px;text-decoration:none}
+.help-center .sheet{margin-bottom:15px;scroll-margin-top:20px}
+.help-topic h2{font-size:20px;color:#103b61;margin:0 0 12px}
+.help-topic h3{font-size:15px;color:#1a4364}
+.help-topic p,.help-topic li{font-size:13px;line-height:1.75;color:#354e64}
+.help-topic li{margin-bottom:7px}
+.help-topic ol,.help-topic ul{padding-left:24px}
+.help-topic a{overflow-wrap:anywhere}
+.help-topic[hidden],.help-empty[hidden]{display:none!important}
+.help-notice{font-size:13px;line-height:1.65;padding:13px 16px;border-left:3px solid #be904c;border-radius:7px;background:#fff8ec;color:#574c3c;margin:13px 0}
+.help-section-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.help-section-head button{padding:10px 14px;font-size:12px;border-radius:7px}
+.help-progress{margin:14px 0;padding:12px 14px;border-radius:8px;background:#eaf3fa;color:#124f78;font-size:13px;font-weight:600}
+.help-steps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.help-step{border:1px solid #d6e2ec;border-radius:10px;padding:16px;background:#fbfdff;display:flex;flex-direction:column;gap:10px}
+.help-step.done{border-color:#b4d8c0;background:#f4faf6}
+.help-step-header{display:flex;gap:10px;align-items:flex-start}
+.help-step-number{display:inline-flex;align-items:center;justify-content:center;flex:0 0 28px;width:28px;height:28px;border-radius:100%;background:#003b73;color:#fff;font-size:13px;font-weight:700}
+.help-step-header h3{margin:1px 0 6px;font-size:15px}
+.help-step-header p{margin:0}
+.help-expected{background:#f0f6fb;border-radius:7px;padding:10px 12px;margin:0!important}
+.help-done{display:flex;align-items:center;gap:9px;margin-top:auto;padding-top:8px;border-top:1px solid #e1e9ef;font-size:12px;color:#154563;cursor:pointer}
+.help-done input{width:17px;height:17px;accent-color:#1d754b}
+.help-footnote{font-size:12px!important;color:#637588!important}
+.help-table-wrap{max-width:100%;overflow-x:auto}
+.help-table{width:100%;min-width:680px;border-collapse:collapse}
+.help-table th,.help-table td{padding:11px 12px;border-bottom:1px solid #dce5ed;text-align:left;vertical-align:top;font-size:12px;line-height:1.6}
+.help-table th{background:#eaf2f8;color:#163f5f}
+.help-table td:first-child{min-width:135px;font-weight:650}
+.help-example{padding:15px;border:1px solid #b9d7e9;border-radius:9px;margin:16px 0;background:#f4f9fd}
+.help-example h3{margin:0 0 8px}
+.help-route{display:inline-flex;padding:10px 15px;border-radius:7px;background:#003b73;color:white!important;font-size:12px;font-weight:650;text-decoration:none;margin-top:10px}
+.help-glossary{display:grid;grid-template-columns:minmax(130px,25%) 1fr;gap:0;margin:12px 0}
+.help-glossary dt,.help-glossary dd{padding:12px;margin:0;border-bottom:1px solid #e2e9f0;font-size:13px;line-height:1.6}
+.help-glossary dt{font-weight:700;color:#16466c}
+.help-glossary dd{color:#395970}
+.help-faq{border:1px solid #d9e5ee;border-radius:9px;margin:10px 0;background:#fafcff}
+.help-faq summary{cursor:pointer;padding:13px 16px;font-size:13px;font-weight:650;color:#164367}
+.help-faq[open] summary{border-bottom:1px solid #dce7ef}
+.help-faq p{margin:0;padding:12px 16px}
+.help-empty{padding:20px;border-radius:9px;background:#fff5e8;border:1px solid #e7ca9f;font-size:13px}
+.help-footer{display:flex;align-items:center;justify-content:space-between;padding:30px 8px;margin:10px 0 30px;color:#607489;font-size:12px}
+.help-footer a{font-weight:650}
+@media(max-width:840px){.help-steps{grid-template-columns:1fr}.help-role-controls button{flex:1}.help-glossary{grid-template-columns:1fr}.help-glossary dt{border-bottom:0;padding-bottom:3px}.help-glossary dd{padding-top:3px}}
+@media(max-width:520px){.help-toolbar{align-items:stretch}.help-toolbar input{flex-basis:100%}.help-center .sheet{padding:16px}.help-hero{padding:16px}.help-topbar b{font-size:11px}}
+@media print{.app-sidebar,.help-topbar,.help-toolbar,.help-role-controls,.help-done,.help-section-head button,.help-quicklinks,.help-footer{display:none!important}.help-steps{grid-template-columns:1fr}.help-step{break-inside:avoid}.help-topic{break-inside:avoid}.help-hero{border:0}}
