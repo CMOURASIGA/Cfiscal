@@ -1,8 +1,221 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ajuda fiscal | CFiscal</title><link rel="icon" href="marca.svg?v=2"><link rel="stylesheet" href="style.css"><script defer src="navigation.js"></script></head><body data-page="ajuda">
-<aside id="sidebar" class="app-sidebar"><div class="brand"><img src="marca.svg?v=2" alt="Ícone CFiscal"><span class="brand-name">CFiscal</span><button type="button" id="sidebarToggle" title="Recolher ou expandir menu" aria-label="Recolher menu lateral" aria-expanded="true">☰</button></div><nav aria-label="Navegação principal"><a href="/#painel" data-nav="painel"><span class="nav-icon">▦</span><span class="nav-label">Dashboard</span></a><a href="/#clientes" data-nav="clientes"><span class="nav-icon">♧</span><span class="nav-label">Clientes</span></a><a href="/#notas" data-nav="notas"><span class="nav-icon">▤</span><span class="nav-label">Notas fiscais</span></a><a href="/#simulacao" data-nav="simulacao"><span class="nav-icon">▧</span><span class="nav-label">Simulação tributária</span></a><a href="/#auditoria" data-nav="auditoria"><span class="nav-icon">✓</span><span class="nav-label">Auditoria fiscal</span></a><a href="/#contador" data-nav="contador"><span class="nav-icon">▥</span><span class="nav-label">Central do contador</span></a><a href="/#impacto" data-nav="impacto"><span class="nav-icon">◫</span><span class="nav-label">Impacto financeiro</span></a><a href="/#agenda" data-nav="agenda"><span class="nav-icon">▦</span><span class="nav-label">Agenda tributária</span></a><a href="/#relatorios" data-nav="relatorios"><span class="nav-icon">▤</span><span class="nav-label">Relatórios</span></a><a href="/#integracoes" data-nav="integracoes"><span class="nav-icon">⇄</span><span class="nav-label">Integrações</span></a><a href="ajuda.html" data-nav="ajuda" aria-current="page"><span class="nav-icon">?</span><span class="nav-label">Ajuda fiscal</span></a></nav><small class="sidebar-foot">CFiscal • Homologação local</small></aside>
-<main class="help" id="appMain"><header><span>CFiscal · Conferência tributária</span><b>Ambiente local</b></header><section class="title"><div><h1>Ajuda fiscal</h1><p>Entenda o que o CFiscal consegue conferir em uma nota de serviço.</p></div></section>
-<section class="sheet"><h2>O que muda na nota de serviço?</h2><p>A reforma introduz dois tributos sobre o consumo. A CBS é federal. O IBS reúne uma parcela estadual e outra municipal. Eles aparecem nos documentos fiscais conforme a etapa da transição, o regime da empresa e a operação.</p><p>2026 é o ano de testes. Em 2027 começa a cobrança da CBS no lugar do PIS e da Cofins. A substituição gradual do ICMS e do ISS pelo IBS ocorre entre 2029 e 2032, com conclusão prevista em 2033. Para qualquer nota fiscal de serviço, a data da operação e o enquadramento tributário do emitente importam. Peça à contabilidade a regra aplicável àquela operação antes de interpretar um campo ausente como erro.</p></section>
-<section class="sheet"><h2>Recebi um XML de nota de serviço. O que faço?</h2><ol><li>Em <a href="/">Conferência fiscal</a>, escolha <strong>Importar XMLs</strong> e selecione a NFS-e nacional em UTF-8. O sistema lê o arquivo e guarda o original no banco local. Essa ação não transmite a nota ao Fisco nem altera sua emissão.</li><li>Confira o recibo do lote. Uma nota nova entra na fila. Uma nota idêntica já cadastrada apresenta <strong>Abrir nota</strong>. Se houver o mesmo identificador com conteúdo diferente, o sistema preserva o registro anterior e informa o conflito.</li><li>Abra a nota para ver emitente, CNPJ, competência, valor do serviço e tributos informados. A conferência inicial soma IBS estadual e municipal e compara essa soma com o total declarado. A CBS aparece como valor declarado.</li><li>Se precisar comparar CBS e IBS com uma calculadora da Receita, abra <strong>Motores</strong>, confirme o regime e os dados da operação e consulte o serviço instalado localmente. O resultado depende das premissas informadas. Depois registre sua conclusão em <strong>Revisão</strong>.</li></ol></section>
-<section class="sheet"><h2>Como interpretar o resultado</h2><dl><dt>Valores coincidentes</dt><dd>As duas parcelas somam o total declarado. A classificação do serviço, a alíquota e o imposto devido ainda podem exigir análise.</dd><dt>Divergência</dt><dd>Por exemplo, R$ 0,24 estadual e R$ 0,24 municipal somam R$ 0,48. Se a nota declarar R$ 1,48, há R$ 1,00 para explicar. Confira o XML original e a parametrização da emissão com a contabilidade. Esse valor sozinho não determina multa, crédito ou imposto a pagar.</dd><dt>Dados insuficientes</dt><dd>Falta um valor necessário à soma ou ele está em formato inválido. Veja no detalhe qual campo motivou a pendência. Confira se ele se aplica à data, ao regime e ao leiaute.</dd><dt>Arquivo recusado</dt><dd>Leia o motivo no recibo. Um PDF, uma NF-e de mercadorias ou um XML de leiaute municipal fora do padrão atendido requer outro fluxo. A fila aceita a NFS-e nacional com número e CNPJ do emitente.</dd></dl></section>
-<section class="sheet"><h2>Clientes e importação em lote</h2><p>Cadastre um cliente pelo nome e CNPJ e selecione-o antes de importar arquivos. O botão <strong>Importar XMLs em lote</strong> permite selecionar vários XMLs ao mesmo tempo. Para segurança do vínculo, o CNPJ do emitente de cada XML deve coincidir com o cadastro selecionado. Arquivos com CNPJ diferente serão recusados individualmente no recibo. XMLs antigos podem ser organizados na fila de notas sem cliente, mediante confirmação do CNPJ.</p><p>O piloto é local, monousuário e usa SQLite. Não há autenticação de clientes nesta versão, portanto não compartilhe o computador ou o serviço local como um portal multiusuário. O localStorage não armazena XMLs fiscais.</p></section><section class="sheet"><h2>Como testar com arquivos fictícios</h2><p><strong>Carregar exemplos</strong> insere as notas 101, 102 e 201. Para testar a entrada de um lote novo, escolha <strong>Importar XMLs</strong> e selecione <strong>301.xml, 302.xml, 303.xml e 304.xml</strong> na pasta <strong>importar</strong> da instalação (por exemplo, C:\\Projetos\\CFiscal\\importar). Esses arquivos <strong>não aparecem ao clicar em Carregar exemplos</strong>: use o botão <strong>Importar XMLs</strong> e selecione-os no explorador de arquivos. A nota 304 é de uma terceira empresa fictícia, tem competência em abril de 2027, valor de serviço de R$ 2.500,00 e IBS de R$ 1,20 (R$ 0,60 estadual e R$ 0,60 municipal). Importe o mesmo lote uma segunda vez para verificar o aviso de duplicidade. O sistema conserva o banco local entre atualizações, portanto um XML anteriormente importado não entra novamente como nota nova.</p></section>
-<section class="sheet"><h2>Fontes oficiais</h2><p>Orientações consultadas em 23/11/2026.</p><ul><li><a href="https://www.gov.br/receitafederal/pt-br/acesso-a-informacao/acoes-e-programas/reforma-tributaria-do-consumo/entenda">Receita Federal · Entenda a Reforma Tributária do Consumo</a></li><li><a href="https://www.gov.br/nfse/pt-br/biblioteca/documentacao-tecnica">Portal da NFS-e · Documentação técnica</a></li></ul></section></main></body></html>
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Central de ajuda do CFiscal: primeiros passos, simulação tributária, auditoria, contadores, relatórios e segurança dos dados.">
+<title>Central de Ajuda | CFiscal</title>
+<link rel="icon" href="marca.svg?v=2">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="help.css">
+<script defer src="navigation.js"></script>
+<script defer src="help.js"></script>
+</head>
+<body data-page="ajuda">
+<aside id="sidebar" class="app-sidebar">
+ <div class="brand"><img src="marca.svg?v=2" alt="Ícone CFiscal"><span class="brand-name">CFiscal</span><button type="button" id="sidebarToggle" title="Recolher ou expandir menu" aria-label="Recolher menu lateral" aria-expanded="true">☰</button></div>
+ <nav aria-label="Navegação principal">
+  <a href="/#painel" data-nav="painel"><span class="nav-icon">▦</span><span class="nav-label">Dashboard</span></a>
+  <a href="/#clientes" data-nav="clientes"><span class="nav-icon">♧</span><span class="nav-label">Clientes</span></a>
+  <a href="/#notas" data-nav="notas"><span class="nav-icon">▤</span><span class="nav-label">Notas fiscais</span></a>
+  <a href="/#simulacao" data-nav="simulacao"><span class="nav-icon">▧</span><span class="nav-label">Simulação tributária</span></a>
+  <a href="/#auditoria" data-nav="auditoria"><span class="nav-icon">✓</span><span class="nav-label">Auditoria fiscal</span></a>
+  <a href="/#contador" data-nav="contador"><span class="nav-icon">▥</span><span class="nav-label">Central do contador</span></a>
+  <a href="/#impacto" data-nav="impacto"><span class="nav-icon">◫</span><span class="nav-label">Impacto financeiro</span></a>
+  <a href="/#agenda" data-nav="agenda"><span class="nav-icon">▦</span><span class="nav-label">Agenda tributária</span></a>
+  <a href="/#relatorios" data-nav="relatorios"><span class="nav-icon">▤</span><span class="nav-label">Relatórios</span></a>
+  <a href="/#integracoes" data-nav="integracoes"><span class="nav-icon">⇄</span><span class="nav-label">Integrações</span></a>
+  <a href="ajuda.html" data-nav="ajuda" aria-current="page"><span class="nav-icon">?</span><span class="nav-label">Ajuda fiscal</span></a>
+ </nav>
+ <small class="sidebar-foot">CFiscal • Guia de utilização</small>
+</aside>
+<main class="help help-center" id="appMain">
+ <header class="help-topbar"><span>CFiscal · Central de conhecimento</span><b id="helpMode">Identificando ambiente...</b></header>
+ <section class="help-hero" id="inicio">
+  <div class="help-eyebrow">Manual do sistema · atualizado em 25/11/2026</div>
+  <h1>Aprenda a utilizar o CFiscal</h1>
+  <p>Do primeiro acesso ao relatório fiscal. Siga o roteiro, entenda os campos e confira o resultado de cada etapa. Você não precisa conhecer a Reforma Tributária para começar.</p>
+  <div class="help-toolbar">
+   <label for="helpSearch">Pesquisar no manual</label>
+   <input type="search" id="helpSearch" placeholder="Ex.: RBT12, importar XML, Fator R, backup, relatório" autocomplete="off">
+   <button id="helpReset" type="button">Limpar pesquisa</button>
+  </div>
+  <div class="help-role-controls" aria-label="Escolha o percurso">
+   <button type="button" class="active" data-role="empresario" aria-pressed="true">Sou empresário</button>
+   <button type="button" data-role="contador" aria-pressed="false">Sou contador</button>
+  </div>
+  <div class="help-quicklinks">
+   <a href="#roteiro">Começar do início</a>
+   <a href="#simulacao">Como preencher a simulação</a>
+   <a href="#resultados">Como ler os resultados</a>
+   <a href="#problemas">Resolver problemas</a>
+  </div>
+ </section>
+ <div id="helpNoResults" class="help-empty" hidden role="status">Nenhum tópico corresponde à busca. Tente palavras como cliente, XML, imposto, backup ou contador.</div>
+ <section class="sheet help-topic" id="antes-de-comecar" data-search="primeiro acesso ambiente local browser armazenamento dados vercel sqlite supabase segurança">
+  <h2>Antes de começar: onde meus dados ficam?</h2>
+  <p><strong>Na versão publicada na Vercel</strong>, os cadastros, XMLs, revisões, estudos e tarefas ficam no armazenamento do <strong>seu navegador</strong> (localStorage). Eles não são compartilhados com outro computador ou navegador. A versão de desenvolvimento no computador usa <strong>Python e SQLite</strong> e mantém um banco independente.</p>
+  <div class="help-notice"><strong>Importante:</strong> não presuma que os dados cadastrados na versão Python aparecerão na Vercel. A sincronização com Supabase ainda não foi implementada. Evite documentos sensíveis em dispositivos compartilhados. Faça backup em <a href="/#clientes">Clientes</a> antes de limpar dados do navegador ou trocar de aparelho.</div>
+  <p><strong>Como reconhecer o ambiente:</strong> o cabeçalho da versão web indica “Dados neste navegador”. Já a aplicação Python local indica “Ambiente local”.</p>
+ </section>
+ <section class="sheet help-topic" id="roteiro" data-search="roteiro fluxo passo a passo primeira vez iniciar empresa contador cadastro importar nota simulação resultados auditoria relatorio">
+  <div class="help-section-head"><div><h2>Seu roteiro de utilização</h2><p>Execute na ordem. Marque uma etapa quando você conseguir verificar seu resultado.</p></div><button type="button" id="helpProgressReset">Reiniciar meu roteiro</button></div>
+  <div class="help-progress" id="helpProgress" role="status">0 de 8 etapas marcadas</div>
+  <div class="help-steps" id="helpSteps">
+   <article class="help-step" data-step="1">
+    <div class="help-step-header"><span class="help-step-number">1</span><div><h3>Cadastre e selecione uma empresa</h3><p>Abra <a href="/#clientes">Clientes</a>, informe razão social e CNPJ, clique em <strong>Cadastrar cliente</strong>. Depois escolha essa empresa no campo <strong>Cliente ativo</strong> do cabeçalho.</p></div></div>
+    <p class="help-expected"><strong>Como saber se deu certo?</strong> O cliente aparece para seleção no cabeçalho. Cadastros com o mesmo CNPJ não devem ser duplicados.</p>
+    <label class="help-done"><input type="checkbox" data-check="1"> Consegui cadastrar e selecionar minha empresa</label>
+   </article>
+   <article class="help-step" data-step="2">
+    <div class="help-step-header"><span class="help-step-number">2</span><div><h3>Importe um XML de NFS-e</h3><p>Abra <a href="/#notas">Notas fiscais</a>, clique em <strong>Importar XMLs em lote</strong> e selecione um ou vários XMLs da NFS-e nacional. O CNPJ do emitente precisa coincidir com o da empresa selecionada.</p></div></div>
+    <p class="help-expected"><strong>Resultado esperado:</strong> o recibo informa as notas novas, repetidas ou recusadas. Se uma nota já existe, ela não deve ser duplicada. Na Vercel, o botão Carregar exemplos fica desabilitado; use um XML sintético para testes.</p>
+    <label class="help-done"><input type="checkbox" data-check="2"> Importei uma nota e conferi o recibo</label>
+   </article>
+   <article class="help-step" data-step="3">
+    <div class="help-step-header"><span class="help-step-number">3</span><div><h3>Abra o documento e registre uma revisão</h3><p>Na fila de <a href="/#notas">Notas fiscais</a>, clique em <strong>Ver nota</strong>. Examine as abas <strong>Conferência</strong>, <strong>Revisão</strong> e <strong>Motores</strong>. Em Revisão, registre responsável, situação e comentário para rastrear sua análise.</p></div></div>
+    <p class="help-expected"><strong>Resultado esperado:</strong> a nota exibe emitente, competência, valores e diagnóstico contextual. A revisão fica vinculada ao documento. “Conferência não executada” não significa erro tributário.</p>
+    <label class="help-done"><input type="checkbox" data-check="3"> Entendi a nota e registrei a revisão</label>
+   </article>
+   <article class="help-step" data-step="4">
+    <div class="help-step-header"><span class="help-step-number">4</span><div><h3>Preencha a Simulação Tributária</h3><p>Abra <a href="/#simulacao">Simulação tributária</a>. Na etapa <strong>1. Informações da empresa</strong>, informe competência, regime, RBT12, projeção de faturamento, equipe, pró-labore, folha e despesas que você souber. Campos não confirmados podem permanecer pendentes.</p></div></div>
+    <p class="help-expected"><strong>Resultado esperado:</strong> o sistema salva os valores por cliente. Use o <a href="#simulacao">dicionário dos campos</a> para não confundir faturamento e folha.</p>
+    <label class="help-done"><input type="checkbox" data-check="4"> Salvei meus dados de simulação</label>
+   </article>
+   <article class="help-step" data-step="5">
+    <div class="help-step-header"><span class="help-step-number">5</span><div><h3>Leia pendências e estimativas</h3><p>Na mesma <a href="/#simulacao">Simulação</a>, abra <strong>2. Diagnóstico e pendências</strong> e depois <strong>3. Resultados e cenários</strong>. Veja quais entradas estão faltando, quais são informadas e quais cálculos são apenas hipóteses.</p></div></div>
+    <p class="help-expected"><strong>Resultado esperado:</strong> os Anexos III e V podem mostrar faixas e memória de cálculo condicionadas. Não interprete a diferença entre eles como economia garantida.</p>
+    <label class="help-done"><input type="checkbox" data-check="5"> Consegui interpretar o resultado preliminar</label>
+   </article>
+   <article class="help-step" data-step="6">
+    <div class="help-step-header"><span class="help-step-number">6</span><div><h3>Confira a Auditoria e o Dashboard</h3><p>Abra <a href="/#auditoria">Auditoria fiscal</a> para identificar documentos com divergência ou revisão. Depois consulte o <a href="/#painel">Dashboard</a> e alterne entre as visões Empresário e Contador. A soma das notas importadas não equivale necessariamente ao faturamento total da empresa.</p></div></div>
+    <p class="help-expected"><strong>Resultado esperado:</strong> notas, valores e pendências refletem os documentos cadastrados. O validador não comprova autenticidade nem conformidade integral.</p>
+    <label class="help-done"><input type="checkbox" data-check="6"> Conferi meus indicadores e alertas</label>
+   </article>
+   <article class="help-step" data-step="7">
+    <div class="help-step-header"><span class="help-step-number">7</span><div><h3>Explore impacto, agenda e relatórios</h3><p>Em <a href="/#impacto">Impacto financeiro</a>, simule custos e margem desejada. Na <a href="/#agenda">Agenda tributária</a>, crie uma tarefa. Em <a href="/#relatorios">Relatórios</a>, gere uma visão Empresário ou Contador e use a opção de impressão para salvar PDF.</p></div></div>
+    <p class="help-expected"><strong>Resultado esperado:</strong> você vê um preço-alvo condicionado, tarefas persistidas no ambiente e um relatório que diferencia hipóteses de fatos.</p>
+    <label class="help-done"><input type="checkbox" data-check="7"> Testei análise financeira, tarefas e relatórios</label>
+   </article>
+   <article class="help-step" data-step="8">
+    <div class="help-step-header"><span class="help-step-number">8</span><div><h3>Faça backup e confira a persistência</h3><p>Na versão web, acesse <a href="/#clientes">Clientes</a> e clique em <strong>Exportar cópia de segurança (JSON)</strong>. Guarde o arquivo em local seguro e atualize o navegador para confirmar se os dados permanecem.</p></div></div>
+    <p class="help-expected"><strong>Resultado esperado:</strong> clientes, notas, simulações e tarefas permanecem após atualizar a página. Restaurar um backup substitui o conjunto de dados do navegador.</p>
+    <label class="help-done"><input type="checkbox" data-check="8"> Fiz backup e confirmei a persistência</label>
+   </article>
+  </div>
+  <p class="help-footnote">As marcações deste roteiro são uma preferência de navegação salva apenas neste navegador; não indicam homologação fiscal, autorização de acesso ou revisão profissional.</p>
+ </section>
+ <section class="sheet help-topic" id="simulacao" data-search="simulacao preencher campos rbt12 prolabore fator r receita folha despesas competencia regime 2027 anexo III V valor 156000 consult">
+  <h2>Como preencher a Simulação Tributária</h2>
+  <p>Escolha primeiro o cliente no cabeçalho. Abra <a href="/#simulacao">Simulação tributária</a>. Os campos abaixo servem para <strong>um estudo preliminar</strong> e não exigem que você converse com um contador antes de visualizar hipóteses. Informações desconhecidas podem permanecer em branco.</p>
+  <div class="help-table-wrap"><table class="help-table">
+   <thead><tr><th>Campo</th><th>O que informar</th><th>Por que importa</th></tr></thead>
+   <tbody>
+    <tr><td>Competência de referência</td><td>Mês e ano estudados, por exemplo 01/2027.</td><td>Define a janela de receitas e a versão das regras.</td></tr>
+    <tr><td>Regime confirmado para o estudo</td><td>Simples, Presumido ou Real, quando conhecido; ou “Ainda não confirmado”.</td><td>É o ponto de partida, não uma alteração efetiva do regime.</td></tr>
+    <tr><td>Atividade sujeita ao Fator R?</td><td>Sim, não ou a confirmar.</td><td>Somente certas atividades dependem da relação folha/receita para o anexo.</td></tr>
+    <tr><td>RBT12</td><td>Receita bruta do intervalo de referência mostrado pelo sistema, não a soma de uma única nota.</td><td>Define a faixa e ajuda a calcular a alíquota efetiva.</td></tr>
+    <tr><td>Projeção anual de 2027</td><td>Previsão de receita para os 12 meses, mesmo que ainda seja hipótese.</td><td>Permite visualizar receita média e cenários de cobrança.</td></tr>
+    <tr><td>Estrutura da equipe</td><td>Somente sócios, com empregados ou ainda não informado.</td><td>Explica a composição potencial da folha.</td></tr>
+    <tr><td>Pró-labore mensal</td><td>Valor bruto retirado pelo trabalho do sócio; se não retira, informe 0.</td><td>É diferente de lucros distribuídos e da receita faturada.</td></tr>
+    <tr><td>Folha elegível em 12 meses</td><td>Total pertinente ao Fator R, conforme regras legais, inclusive itens elegíveis do pró-labore e encargos. Se não souber, deixe vazio.</td><td>Não copie o faturamento para a folha. O CFiscal não soma o pró-labore outra vez.</td></tr>
+    <tr><td>Despesas em 12 meses</td><td>Custos/despesas empresariais informados, se conhecidos.</td><td>São base preliminar para estudo financeiro; nem toda despesa é dedutível ou gera crédito.</td></tr>
+   </tbody>
+  </table></div>
+  <div class="help-example">
+   <h3>Exemplo de estudo: serviço de TI com receita de R$ 13 mil por mês</h3>
+   <p>Premissas de demonstração: faturamento projetado de <strong>R$ 156.000 em 2027</strong>, sem empregados e pró-labore de <strong>R$ 0,00</strong>. Para o RBT12 da competência 01/2027, use as receitas do período exibido no CFiscal, que poderá ser diferente do total de janeiro a dezembro de 2026. Não invente o valor da folha ou a classificação da atividade.</p>
+   <p>No simulador, clique em <strong>Usar esses valores como hipótese</strong> somente quando a empresa selecionada for a Consult Services. Essa ação não salva automaticamente os dados nem confirma o enquadramento tributário.</p>
+   <p><strong>Exemplo aritmético:</strong> com projeção uniforme de R$ 13 mil mensais e primeira faixa, 6% representam R$ 780/mês (Anexo III) e 15,5% representam R$ 2.015/mês (Anexo V). Esses valores não são dois tributos a pagar, nem provam qual anexo é aplicável.</p>
+  </div>
+  <div class="help-notice"><strong>Fator R:</strong> a relação entre folha elegível e receita é usada em determinadas atividades para estudar a aplicação dos Anexos III/V. A referência de 28% é um critério de enquadramento quando aplicável, não uma taxa cobrada nem uma recomendação de retirar pró-labore. A ausência de pró-labore, isoladamente, não comprova folha zero.</div>
+  <a class="help-route" href="/#simulacao">Abrir Simulação Tributária</a>
+ </section>
+ <section class="sheet help-topic" id="resultados" data-search="resultados calculado informado hipótese pendente tributos das rbt12 memoria de calculo receita faixa deducao aliquota nominal anexo">
+  <h2>Como interpretar os resultados</h2>
+  <dl class="help-glossary">
+   <dt>Informado</dt><dd>É um valor digitado ou fornecido pelo usuário, como RBT12 ou projeção anual. Ele não foi verificado no PGDAS-D.</dd>
+   <dt>Calculado, mas hipotético</dt><dd>É uma conta reproduzível feita a partir de premissas, como receita mensal × alíquota. Não equivale ao DAS oficialmente apurado.</dd>
+   <dt>Memória de cálculo</dt><dd>Mostra RBT12, faixa, alíquota nominal, parcela a deduzir, alíquota efetiva, receita utilizada e versão da regra. Serve para entender como o CFiscal chegou à estimativa.</dd>
+   <dt>Pendente</dt><dd>Faltam dados ou uma regra validada para concluir aquela apuração. Você ainda pode explorar outros resultados disponíveis.</dd>
+   <dt>Diferença matemática dos Anexos III/V</dt><dd>É a diferença entre dois exemplos. Não significa economia garantida nem autorização para escolher o anexo mais barato.</dd>
+   <dt>Conferência aritmética não executada</dt><dd>A nota não tinha os valores necessários para somar IBS estadual e municipal. Se a ausência é contextualizada, isso não representa automaticamente erro.</dd>
+   <dt>Conformidade integral não determinada</dt><dd>O sistema não validou todas as regras, a autenticidade, a assinatura ou o XSD. Não interprete a mensagem como aprovação fiscal.</dd>
+  </dl>
+  <p><strong>O que ainda não é calculado integralmente?</strong> DAS oficial, Lucro Presumido completo, Lucro Real completo e IBS/CBS do regime regular. Esses cenários continuam condicionados aos parâmetros e às integrações pendentes.</p>
+ </section>
+ <section class="sheet help-topic" id="notas" data-search="xml nota fiscal notas lote importar duplicada rejeitada recusada conferencia revisao motores prefeitura assinatura xsd danfse">
+  <h2>Notas fiscais, revisões e motores</h2>
+  <details class="help-faq" open><summary>Qual XML posso importar?</summary><p>O sistema aceita XML da <strong>NFS-e padrão nacional</strong>, com número e CNPJ do emitente. O CNPJ precisa coincidir com o cliente ativo. Um PDF de nota, NF-e de mercadorias e XML de outros leiautes podem ser recusados. Uma importação não transmite o documento ao Fisco nem altera o original.</p></details>
+  <details class="help-faq"><summary>Por que aparece “Já estava na fila”?</summary><p>O documento já está registrado. O CFiscal evita duplicidade e preserva revisões anteriores. Use <strong>Abrir nota</strong> no recibo ou localize-o na fila.</p></details>
+  <details class="help-faq"><summary>O que fazem as abas Conferência, Revisão e Motores?</summary><p><strong>Conferência</strong> mostra valores, diagnóstico contextual e limitações da análise. <strong>Revisão</strong> registra situação, responsável e comentário. <strong>Motores</strong> consulta calculadoras locais quando há serviços instalados e disponíveis. Na Vercel com localStorage, os motores oficiais não funcionam.</p></details>
+  <details class="help-faq"><summary>O que significa divergência?</summary><p>O total do IBS informado no XML não coincide com a soma das parcelas estadual e municipal. Exemplo: 0,24 + 0,24 = 0,48; um total declarado de 1,48 produz diferença aritmética de 1,00. Isso não determina sozinho imposto a pagar, multa ou crédito.</p></details>
+  <details class="help-faq"><summary>Posso gerar a DANFSe em PDF pela versão web?</summary><p>Não pela integração oficial. Ela depende de backend. A opção de imprimir relatórios do CFiscal é diferente da emissão ou obtenção de uma DANFSe oficial.</p></details>
+  <a class="help-route" href="/#notas">Abrir Notas fiscais</a>
+ </section>
+ <section class="sheet help-topic" id="auditoria" data-search="auditoria fiscal divergencia xml alertas prioridade revisar autorizado status documento xsd assinatura">
+  <h2>Auditoria Fiscal: como conferir uma nota</h2>
+  <ol><li>Selecione a empresa no cabeçalho.</li><li>Abra <a href="/#auditoria">Auditoria fiscal</a> e clique em <strong>Atualizar análise</strong>.</li><li>Observe documentos, divergências, revisões e informativos.</li><li>Clique em <strong>Ver nota</strong> e confira o diagnóstico antes de registrar uma revisão.</li></ol>
+  <p><strong>O que significam os alertas?</strong> Divergência indica diferença na totalização aritmética; revisão indica ocorrência que precisa de análise; informativo descreve situação contextualizada. Essas categorias não comprovam que a nota foi autorizada e não substituem validação de assinatura ou XSD.</p>
+ </section>
+ <section class="sheet help-topic" id="contador" data-search="contador carteira clientes escritorio multiplas empresas dashboard colaboracao central abrir documentos responsabilidades">
+  <h2>Central do Contador: como acompanhar empresas</h2>
+  <ol><li>Cadastre as empresas em <a href="/#clientes">Clientes</a>.</li><li>Importe as notas de cada emitente com seu CNPJ correspondente.</li><li>Abra <a href="/#contador">Central do contador</a> e clique em <strong>Atualizar carteira</strong>.</li><li>Confira quantidade de notas, revisões pendentes e divergências por cliente.</li><li>Use <strong>Ver documentos</strong> para abrir a fila da empresa selecionada.</li><li>Em <a href="/#relatorios">Relatórios</a>, gere o formato técnico para registrar a análise preliminar.</li></ol>
+  <div class="help-notice">A versão Vercel ainda <strong>não é um portal compartilhado entre contador e empresário</strong>. Cada navegador possui seu próprio banco. Não existem perfis, login ou autorização de acesso por cliente até a integração futura com backend e Supabase.</div>
+ </section>
+ <section class="sheet help-topic" id="impacto" data-search="impacto financeiro preço custos margem percentual faturamento lucro preço alvo formula">
+  <h2>Impacto Financeiro: como simular preços</h2>
+  <ol><li>Preencha RBT12 e projeção de receita em <a href="/#simulacao">Simulação Tributária</a>.</li><li>Acesse <a href="/#impacto">Impacto financeiro</a>.</li><li>Informe <strong>custos operacionais mensais</strong>, incluindo apenas valores que você conhece ou pode estimar claramente.</li><li>Informe a <strong>margem desejada</strong> como percentual da receita, por exemplo 20.</li><li>Clique em <strong>Calcular impacto</strong> e compare os preços-alvo ilustrativos por anexo.</li></ol>
+  <p><strong>Fórmula simplificada:</strong> preço-alvo = custos mensais ÷ (1 − margem desejada − alíquota efetiva simulada). Exemplo: custo mensal de R$ 6.000, margem de 20% e alíquota hipotética de 6% geram preço-alvo aproximado de R$ 8.108,11.</p>
+  <p><strong>Limitação:</strong> não considera integralmente tributos fora do DAS, créditos, variação de vendas ou despesas que não tenham sido informadas. Use para explorar sensibilidade, não para alterar contratos automaticamente.</p>
+ </section>
+ <section class="sheet help-topic" id="agenda" data-search="agenda calendario prazos eventos tarefas adicionar prazo vencimento concluir excluir alerta notificacao">
+  <h2>Agenda Tributária: acompanhar providências</h2>
+  <ol><li>Selecione a empresa no cabeçalho.</li><li>Abra <a href="/#agenda">Agenda tributária</a> e leia os prazos legais de referência com links de fonte.</li><li>Na seção <strong>Tarefas da empresa</strong>, informe a descrição e o prazo interno.</li><li>Clique em <strong>Adicionar tarefa</strong>.</li><li>Marque a tarefa como concluída ao executá-la, ou use Excluir quando não for mais necessária.</li></ol>
+  <p><strong>Atenção:</strong> os prazos exibidos são referências que devem ser conferidas na fonte oficial antes de qualquer opção fiscal. A agenda local não envia e-mails, notificações automáticas nem lembretes programados. As tarefas ficam no navegador e entram no backup JSON.</p>
+ </section>
+ <section class="sheet help-topic" id="relatorios" data-search="relatorios empresario contador imprimir pdf json resultado memoria fiscal">
+  <h2>Relatórios: emitir uma análise compreensível</h2>
+  <ol><li>Selecione uma empresa com documentos ou parâmetros de estudo.</li><li>Abra <a href="/#relatorios">Relatórios</a>.</li><li>Clique em <strong>Relatório Empresário</strong> para resumo e premissas ou em <strong>Relatório Contador</strong> para mais detalhes e rastreabilidade dos documentos.</li><li>Use <strong>Imprimir ou salvar em PDF</strong> e, na janela do navegador, escolha “Salvar como PDF”.</li><li>Se desejar informações estruturadas, clique em <strong>Exportar relatório JSON</strong>.</li></ol>
+  <p>Os relatórios documentam os dados presentes nesta instalação e as estimativas, mas não substituem a apuração PGDAS-D, laudo contábil ou documento fiscal oficial.</p>
+ </section>
+ <section class="sheet help-topic" id="backup" data-search="backup json restaurar armazenamento dados navegador sqlite vercel perda dados limpar apagar localstorage privacidade">
+  <h2>Backup, privacidade e migração futura</h2>
+  <ol><li>Na versão Vercel, vá a <a href="/#clientes">Clientes</a> e clique em <strong>Exportar cópia de segurança (JSON)</strong>.</li><li>Guarde o JSON em local seguro: o arquivo contém informações de clientes, XMLs, revisões e estudos.</li><li>Para recuperar, use <strong>Restaurar cópia</strong> e selecione o arquivo. Leia a confirmação, pois a restauração <strong>substitui</strong> os dados daquele navegador.</li><li>Não use <strong>Apagar dados deste navegador</strong> sem ter uma cópia verificada.</li></ol>
+  <div class="help-notice"><strong>Não há Supabase nesta versão:</strong> outro computador não verá as mesmas informações. A futura migração para autenticação e banco central precisa de rotina específica de importação, validação de CNPJ, deduplicação e isolamento por empresa. Não é automática.</div>
+  <a class="help-route" href="/#clientes">Abrir Clientes e backup</a>
+ </section>
+ <section class="sheet help-topic" id="problemas" data-search="problemas troubleshooting erro tela vazia campo faltando cliente importar arquivo nota pdf xml calculo pendente acesso vercel proteção">
+  <h2>Resolução de problemas comuns</h2>
+  <details class="help-faq"><summary>Abri o CFiscal e não encontro a empresa que cadastrei.</summary><p>Confira o domínio acessado e o navegador/dispositivo. Dados salvos no SQLite Python não aparecem automaticamente na Vercel; dados de outro domínio Vercel também não aparecem. Se houver backup JSON daquele ambiente, restaure com cuidado.</p></details>
+  <details class="help-faq"><summary>O XML foi recusado ou não aparece na fila.</summary><p>Verifique o <strong>Cliente ativo</strong>, o CNPJ do emitente no XML, se o arquivo é NFS-e nacional e a mensagem exata do recibo. Se aparecer “Já estava na fila”, abra a nota existente em vez de importar novamente.</p></details>
+  <details class="help-faq"><summary>Preenchi R$ 156 mil e não vejo o cálculo esperado.</summary><p>Veja se o valor foi colocado em <strong>RBT12</strong> ou <strong>projeção anual</strong>. Não lance receita no campo de folha. No cálculo versionado, RBT12 e receita mensal projetada são informações distintas. Abra “Diagnóstico e pendências” para conferir o que falta.</p></details>
+  <details class="help-faq"><summary>O resultado informa que o imposto de 2027 está pendente.</summary><p>O CFiscal pode mostrar exemplos condicionados, mas não calcula automaticamente o DAS oficial, nem o conjunto completo de tributos do Lucro Presumido, Lucro Real ou do IBS/CBS regular. “Pendente” não significa falha do servidor. Verifique as premissas e a memória de cálculo disponível.</p></details>
+  <details class="help-faq"><summary>O botão Motores ou DANFSe está indisponível.</summary><p>Na Vercel essas integrações exigem backend e não estão habilitadas. Acesse a versão Python local com os serviços fiscais instalados, quando autorizados e configurados.</p></details>
+  <details class="help-faq"><summary>A Vercel solicita login ou acesso de equipe.</summary><p>O projeto de homologação pode estar protegido pelas configurações de acesso da Vercel. Entre com a conta autorizada. Isso é diferente de autenticação do CFiscal, que ainda não existe na versão web localStorage.</p></details>
+  <details class="help-faq"><summary>O relatório abre a impressão, mas não baixa um PDF.</summary><p>Na caixa de impressão do navegador, selecione o destino <strong>Salvar como PDF</strong>. A função não envia um PDF fiscal oficial e não precisa de backend.</p></details>
+  <details class="help-faq"><summary>Por que o cadastro não aparece para meu contador?</summary><p>Porque o CFiscal na Vercel usa localStorage: cada navegador mantém seu próprio conjunto de dados. Compartilhamento seguro só será possível após o desenvolvimento de autenticação e banco central com isolamento entre empresas.</p></details>
+ </section>
+ <section class="sheet help-topic" id="conceitos" data-search="conceitos glossario CBS IBS reforma tributaria simples RBT12 fator r 2026 2027 2033 fontes">
+  <h2>Conceitos tributários essenciais</h2>
+  <dl class="help-glossary">
+   <dt>CBS</dt><dd>Contribuição sobre Bens e Serviços, tributo federal da Reforma Tributária do Consumo.</dd>
+   <dt>IBS</dt><dd>Imposto sobre Bens e Serviços, com componentes estadual e municipal, cuja transição se dá conforme o cronograma legal.</dd>
+   <dt>RBT12</dt><dd>Receita bruta do período de referência de 12 meses usado para determinar a faixa aplicável. O intervalo é mostrado na Simulação e depende da competência.</dd>
+   <dt>Alíquota nominal e efetiva</dt><dd>A nominal é a da faixa legal. A efetiva resulta da fórmula que considera RBT12 e parcela a deduzir, quando aplicável.</dd>
+   <dt>Fator R</dt><dd>Relação entre folha elegível e receita de referência para certas atividades do Simples. Seu uso depende da classificação tributária e das regras vigentes.</dd>
+   <dt>CST, cClassTrib, NBS</dt><dd>Códigos que ajudam a classificar operação e tratamento tributário. A presença isolada dos códigos no XML não é validação de conformidade integral.</dd>
+  </dl>
+  <p><strong>Transição em linhas gerais:</strong> 2026 concentra testes e adequação de documentos; a CBS tem etapas relevantes a partir de 2027; o IBS substitui gradualmente ICMS/ISS entre 2029 e 2032, com conclusão prevista em 2033. A aplicação concreta depende do regime, operação, benefícios e normas posteriores.</p>
+  <h3>Fontes para aprofundamento</h3>
+  <ul>
+   <li><a href="https://www.gov.br/receitafederal/pt-br/acesso-a-informacao/acoes-e-programas/reforma-tributaria-do-consumo/entenda" target="_blank" rel="noopener noreferrer">Receita Federal: Reforma Tributária do Consumo</a></li>
+   <li><a href="https://www.gov.br/nfse/pt-br/biblioteca/documentacao-tecnica" target="_blank" rel="noopener noreferrer">Portal NFS-e: documentação técnica</a></li>
+   <li><a href="https://www.gov.br/receitafederal/pt-br/assuntos/noticias/2026/novembro/comite-gestor-do-simples-nacional-publica-novas-regras-para-o-simples-nacional-e-para-a-transicao-da-reforma-tributaria" target="_blank" rel="noopener noreferrer">Receita Federal: regras publicadas em novembro de 2026</a></li>
+   <li><a href="https://legis.senado.gov.br/norma/40180341/publicacao/40181117" target="_blank" rel="noopener noreferrer">Tabela legal: Anexo III 2027–2028</a></li>
+   <li><a href="https://legis.senado.gov.br/norma/40180341/publicacao/40181129" target="_blank" rel="noopener noreferrer">Tabela legal: Anexo V 2027–2028</a></li>
+  </ul>
+  <p class="help-footnote">Este material ensina a utilizar a versão instalada. O manual e os exemplos não constituem parecer contábil, confirmação de enquadramento ou apuração oficial.</p>
+ </section>
+ <footer class="help-footer"><span>CFiscal · Central de Ajuda</span><a href="#inicio">Voltar ao início</a></footer>
+</main></body></html>
