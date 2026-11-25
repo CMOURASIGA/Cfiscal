@@ -247,6 +247,17 @@ class Conferencia(unittest.TestCase):
         self.assertIn("m-14",js)
         self.assertIn('payroll===0?0.01:raw',js)
 
+    def test_cliente_ativo_inicializa_simulacao_no_navegador(self):
+        app=self.call("/app.js").decode()
+        simulation=self.call("/simulation.js").decode()
+        self.assertIn('ACTIVE_CLIENT_KEY="cfiscal:active-client:v1"',app)
+        self.assertIn('select.dispatchEvent(new Event("change",{bubbles:true}))',app)
+        self.assertIn('active.length===1?active[0].id',app)
+        self.assertIn('saveActiveClient($("clientSelect").value)',app)
+        self.assertIn('for(const control of form.elements)control.disabled=false',simulation)
+        self.assertIn('$("clientSelect").addEventListener("change"',simulation)
+        self.assertIn('button.disabled=!selectedClient()||!isConsultSelected()',simulation)
+
     def test_continuar_da_nota_para_simulacao(self):
         html=self.call("/").decode()
         js=self.call("/app.js").decode()
