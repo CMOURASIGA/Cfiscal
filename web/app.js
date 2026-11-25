@@ -156,6 +156,12 @@ function detail(n) {
     };
     $("overview").append(el("p","Nota antiga sem vínculo: selecione um cliente com o mesmo CNPJ antes de vincular."),btn);
   }
+  const lastReview=historyOf(n).at(-1);
+  $("documentStepTitle").textContent=lastReview?"Etapa 3 concluída · Revisão registrada":"Etapa 3 de 8 · Conferência e revisão";
+  $("documentStepStatus").textContent=lastReview?
+    "Última revisão: "+lastReview.data.situacao+" por "+lastReview.data.responsavel+". Você pode seguir para a Simulação Tributária. A revisão não constitui homologação fiscal oficial.":
+    "Ainda não há revisão registrada. Abra a aba Revisão para salvar uma análise, ou avance com a etapa pendente. A simulação não depende de consulta prévia à contabilidade.";
+  $("documentReviewTab").textContent=lastReview?"Consultar revisão":"Registrar revisão";
   $("review").reset(); $("review").elements.responsavel.value=historyOf(n).at(-1)?.data.responsavel||"";
   $("history").replaceChildren(...historyOf(n).slice().reverse().map(e=>{
     const box=el("div",undefined,"event");
@@ -214,6 +220,12 @@ $("motor").onchange=engineFields;
 $("pdf").onclick=async()=>{try{download(await api("pdf",{id:current.id,cliente_id:$("clientSelect").value}),"DANFSe-"+current.number+".pdf");}catch(e){message(e.message);}};
 $("print").onclick=()=>window.print();
 $("close").onclick=()=>$("drawer").close();
+$("documentReviewTab").onclick=()=>$("t2").click();
+$("documentContinue").onclick=()=>{
+  $("drawer").close();
+  if(typeof window.CFiscalNavigate==="function")window.CFiscalNavigate("simulacao");
+  else location.hash="#simulacao";
+};
 $("import").onclick=()=>$("files").click();
 $("files").onchange=async e=>{await batch(Array.from(e.target.files));e.target.value="";};
 $("demo").onclick=async()=>{
