@@ -40,6 +40,7 @@ jobs:
           node --check web/browser-store.js
           node --check web/tax-engine.js
           node --check web/fiscal-workspace.js
+          node --check web/help.js
           node --check web/componentes/consult-tabs.js
       - name: Testar exemplos financeiros
         run: node --test tests/preliminary.test.js tests/browser-store.test.js tests/tax-engine.test.js
