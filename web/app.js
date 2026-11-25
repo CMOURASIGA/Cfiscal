@@ -256,6 +256,9 @@ async function refreshClients(selectId=""){
   $("clientSelect").replaceChildren(new Option("Selecione um cliente",""),...clients.filter(c=>c.active).map(c=>new Option(c.name+" · "+c.cnpj,c.id)));
   $("clientSelect").value=existing;
   if(!selectId && existing && !$("clientSelect").value)$("clientSelect").value="";
+  // Clientes são carregados de forma assíncrona depois dos demais módulos.
+  // Avisar Simulação, Dashboard e rotinas dependentes do cliente para sincronizar a tela.
+  $("clientSelect").dispatchEvent(new Event("change", {bubbles:true}));
 }
 $("clientForm").onsubmit=async e=>{
   e.preventDefault();
