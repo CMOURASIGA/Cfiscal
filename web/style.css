@@ -179,3 +179,12 @@ body:not(.sidebar-collapsed) #appMain{margin-left:228px}
 .help-entry a{display:inline-block;padding:9px 13px;background:#003b73;color:white!important;border-radius:7px;text-decoration:none;font-size:12px;font-weight:700}
 .help-inline{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .help-inline a{font-size:12px;font-weight:650;color:#075b99}
+
+/* Continuidade do fluxo de homologação dentro do detalhe da NFS-e. */
+.document-next-step{position:relative;display:flex;flex-direction:column;gap:11px;margin:8px 0 17px;padding:14px;border:1px solid #b8d5e9;border-radius:10px;background:#f1f8fc}
+.document-next-copy strong{display:block;color:#134b70;font-size:13px}
+.document-next-copy p{font-size:12px;line-height:1.55;margin:6px 0 0;color:#466377}
+.document-next-actions{display:flex;flex-wrap:wrap;gap:8px}
+.document-next-actions button{flex:1 1 auto;padding:9px 11px;font-size:12px;min-height:38px;border-radius:7px;white-space:normal}
+.document-next-actions button.primary{background:#003b73;color:#fff}
+@media(max-width:650px){.document-next-actions button{flex:1 1 100%}}
