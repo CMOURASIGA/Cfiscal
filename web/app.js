@@ -250,15 +250,27 @@ $("export").onclick=()=>{
 };
 for(const id of ["company","month","status","workflow"])$(id).onchange=render;
 document.querySelector('a[href="#integracoes"]').onclick=()=>$("integracoes").open=true;
+const ACTIVE_CLIENT_KEY="cfiscal:active-client:v1";
+function persistedClient(){
+  try{return localStorage.getItem(ACTIVE_CLIENT_KEY)||"";}catch(_){return "";}
+}
+function saveActiveClient(id){
+  try{
+    if(id)localStorage.setItem(ACTIVE_CLIENT_KEY,id);
+    else localStorage.removeItem(ACTIVE_CLIENT_KEY);
+  }catch(_){}
+}
 async function refreshClients(selectId=""){
   clients=await api("clientes");
-  const existing=selectId || $("clientSelect").value;
-  $("clientSelect").replaceChildren(new Option("Selecione um cliente",""),...clients.filter(c=>c.active).map(c=>new Option(c.name+" · "+c.cnpj,c.id)));
-  $("clientSelect").value=existing;
-  if(!selectId && existing && !$("clientSelect").value)$("clientSelect").value="";
-  // Clientes são carregados de forma assíncrona depois dos demais módulos.
-  // Avisar Simulação, Dashboard e rotinas dependentes do cliente para sincronizar a tela.
-  $("clientSelect").dispatchEvent(new Event("change", {bubbles:true}));
+  const select=$("clientSelect");
+  const active=clients.filter(c=>c.active);
+  const prior=selectId||select.value||persistedClient();
+  select.replaceChildren(new Option("Selecione um cliente",""),...active.map(c=>new Option(c.name+" · "+c.cnpj,c.id)));
+  const restored=active.some(c=>c.id===prior)?prior:active.length===1?active[0].id:"";
+  select.value=restored;
+  saveActiveClient(restored);
+  // O cadastro é carregado de forma assíncrona: sincronizar as telas dependentes.
+  select.dispatchEvent(new Event("change",{bubbles:true}));
 }
 $("clientForm").onsubmit=async e=>{
   e.preventDefault();
@@ -271,7 +283,7 @@ $("clientForm").onsubmit=async e=>{
     message("Cliente cadastrado. Selecione XMLs cujo emitente tenha o CNPJ informado.");
   }catch(err){message(err.message);}finally{button.disabled=false;}
 };
-$("clientSelect").onchange=()=>{legacyMode=false;refresh().catch(e=>message(e.message));};
+$("clientSelect").onchange=()=>{saveActiveClient($("clientSelect").value);legacyMode=false;refresh().catch(e=>message(e.message));};
 $("legacy").onclick=()=>{legacyMode=true;refresh().catch(e=>message(e.message));};
 $("backClient").onclick=()=>{legacyMode=false;refresh().catch(e=>message(e.message));};
 refreshClients().then(()=>refresh()).catch(e=>message(e.message));
